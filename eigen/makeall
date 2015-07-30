@@ -1,0 +1,6 @@
+cd ../Library/
+bash makelib
+cd ../eigen/
+
+make
+make clean
