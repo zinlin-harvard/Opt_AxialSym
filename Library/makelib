@@ -1,0 +1,8 @@
+#! /bin/bash
+export PETSC_DIR=/etc/petsc-3.5.3
+export PETSC_ARCH=arch-opt
+
+make clean
+make
+ar rcs libOPT.a *.o
+make clean 
