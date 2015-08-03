@@ -346,3 +346,58 @@ PetscErrorCode myinterp(MPI_Comm comm, Mat *Aout, int Nr, int Nz, int Mr, int Mz
   *Aout = A;
   PetscFunctionReturn(0);
 }
+
+PetscErrorCode expandMat(MPI_Comm comm, Mat *Aout, int DegFree, int multiplier)
+{
+  PetscErrorCode ierr;
+  int i,j,ns,ne;
+  Mat A;
+  
+  MatCreate(comm, &A);
+  MatSetType(A,MATMPIAIJ);
+  MatSetSizes(A,PETSC_DECIDE, PETSC_DECIDE, multiplier*DegFree, DegFree);
+  MatMPIAIJSetPreallocation(A, 1, PETSC_NULL, 1, PETSC_NULL);
+
+  ierr = MatGetOwnershipRange(A, &ns, &ne); CHKERRQ(ierr);
+
+  for(i=ns;i<ne;i++){
+
+    j=i/multiplier;
+    ierr = MatSetValue(A,i,j,1.0,INSERT_VALUES); CHKERRQ(ierr);
+
+  }
+
+  ierr = MatAssemblyBegin(A, MAT_FINAL_ASSEMBLY); CHKERRQ(ierr);
+  ierr = MatAssemblyEnd(A, MAT_FINAL_ASSEMBLY); CHKERRQ(ierr);
+
+  *Aout = A;
+  PetscFunctionReturn(0);
+
+}
+
+PetscErrorCode myinterpmultiplier(MPI_Comm comm, Mat *Aout, int Nr, int Nz, int multiplier, int DegFree, int mr, int mz, int Mzslab)
+{
+
+  PetscErrorCode ierr;
+  Mat A,A1,A2;
+
+  if(Mzslab==1){
+    myinterp(comm,&A1,Nr,Nz,multiplier*DegFree,1,mr,mz,Mzslab);
+  }else if(Mzslab==2){
+    myinterp(comm,&A1,Nr,Nz,1,multiplier*DegFree,mr,mz,Mzslab);
+  }   else{
+    PetscPrintf(comm,"!!!!!you cannot use myinterpmultiplier with Mzslab=0. So defaulted to Mzslab=1!!!!\n");
+    myinterp(comm,&A1,Nr,Nz,multiplier*DegFree,1,mr,mz,1);
+  }
+    
+  expandMat(comm,&A2,DegFree,multiplier);
+
+  ierr = MatMatMult(A1,A2,MAT_INITIAL_MATRIX,PETSC_DEFAULT,&A); CHKERRQ(ierr);
+
+  MatDestroy(&A1);
+  MatDestroy(&A2);
+  
+  *Aout = A;
+  PetscFunctionReturn(0); 
+
+}

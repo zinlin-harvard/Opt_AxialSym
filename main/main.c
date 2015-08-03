@@ -70,6 +70,11 @@ int main(int argc, char **argv)
   if(Qabs>1e15) Qabs=1.0/0.0;
   MyCheckAndOutputDouble(flg,Qabs,"Qabs","Qabs");
 
+  int multiplier;
+  PetscOptionsGetInt(PETSC_NULL,"-multiplier",&multiplier,&flg);
+  if(!flg) multiplier=1;
+  PetscPrintf(PETSC_COMM_WORLD,"------multiplier is: %d \n ",multiplier); 
+
   int outputbase;
   PetscOptionsGetInt(PETSC_NULL,"-outputbase",&outputbase,&flg); MyCheckAndOutputInt(flg,outputbase,"outputbase","outputbase");
 
@@ -118,7 +123,11 @@ int main(int argc, char **argv)
   PetscOptionsGetReal(PETSC_NULL,"-epssub2",&epssub2,&flg); MyCheckAndOutputDouble(flg,epssub2,"epssub2","epssub2"); 
 
   /*------Set up the A, C, D matrices--------------*/
-  myinterp(PETSC_COMM_WORLD,&A,Nr,Nz,Mr,Mz,mr0,mz0,Mzslab); 
+  if(multiplier==1){
+    myinterp(PETSC_COMM_WORLD,&A,Nr,Nz,Mr,Mz,mr0,mz0,Mzslab);
+  }else{
+    myinterpmultiplier(PETSC_COMM_WORLD,&A,Nr,Nz,multiplier,DegFree,mr0,mz0,Mzslab);
+  }
   CongMat(PETSC_COMM_WORLD, &C, 6*Nzr);
   ImagIMat(PETSC_COMM_WORLD, &D,6*Nzr);
 

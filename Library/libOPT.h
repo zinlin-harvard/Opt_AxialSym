@@ -98,6 +98,9 @@ PetscErrorCode AddMuAbsorption(double *muinv, Vec muinvpml, double Qabs, int add
 PetscErrorCode GetUnitVec(Vec ej, int pol, int N);
 PetscErrorCode GetRadiusVec(Vec vecRad, int Nr, int Nz, double hr, int m);
 PetscErrorCode myinterp(MPI_Comm comm, Mat *Aout, int Nr, int Nz, int Mr, int Mz, int mr, int mz, int Mzslab);
+PetscErrorCode expandMat(MPI_Comm comm, Mat *Aout, int DegFree, int multiplier);
+PetscErrorCode myinterpmultiplier(MPI_Comm comm, Mat *Aout, int Nr, int Nz, int multiplier, int DegFree, int mr, int mz, int Mzslab);
+
 
 // from Output.c
 PetscErrorCode OutputVec(MPI_Comm comm, Vec x, const char *filenameComm, const char *filenameProperty);
