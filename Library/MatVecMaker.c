@@ -375,21 +375,22 @@ PetscErrorCode expandMat(MPI_Comm comm, Mat *Aout, int DegFree, int multiplier)
 
 }
 
-PetscErrorCode myinterpmultiplier(MPI_Comm comm, Mat *Aout, int Nr, int Nz, int multiplier, int DegFree, int mr, int mz, int Mzslab)
+PetscErrorCode myinterpmultiplier(MPI_Comm comm, Mat *Aout, int Nr, int Nz, int multiplier, int Mr, int Mz, int mr, int mz, int Mzslab)
 {
 
   PetscErrorCode ierr;
   Mat A,A1,A2;
 
   if(Mzslab==1){
-    myinterp(comm,&A1,Nr,Nz,multiplier*DegFree,1,mr,mz,Mzslab);
+    myinterp(comm,&A1,Nr,Nz,multiplier*Mr,Mz,mr,mz,Mzslab);
   }else if(Mzslab==2){
-    myinterp(comm,&A1,Nr,Nz,1,multiplier*DegFree,mr,mz,Mzslab);
+    myinterp(comm,&A1,Nr,Nz,Mr,multiplier*Mz,mr,mz,Mzslab);
   }   else{
     PetscPrintf(comm,"!!!!!you cannot use myinterpmultiplier with Mzslab=0. So defaulted to Mzslab=1!!!!\n");
-    myinterp(comm,&A1,Nr,Nz,multiplier*DegFree,1,mr,mz,1);
+    myinterp(comm,&A1,Nr,Nz,multiplier*Mr,Mz,mr,mz,1);
   }
-    
+
+  int DegFree=(Mzslab==1)? Mr : Mz;
   expandMat(comm,&A2,DegFree,multiplier);
 
   ierr = MatMatMult(A1,A2,MAT_INITIAL_MATRIX,PETSC_DEFAULT,&A); CHKERRQ(ierr);

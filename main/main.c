@@ -126,7 +126,7 @@ int main(int argc, char **argv)
   if(multiplier==1){
     myinterp(PETSC_COMM_WORLD,&A,Nr,Nz,Mr,Mz,mr0,mz0,Mzslab);
   }else{
-    myinterpmultiplier(PETSC_COMM_WORLD,&A,Nr,Nz,multiplier,DegFree,mr0,mz0,Mzslab);
+    myinterpmultiplier(PETSC_COMM_WORLD,&A,Nr,Nz,multiplier,Mr,Mz,mr0,mz0,Mzslab);
   }
   CongMat(PETSC_COMM_WORLD, &C, 6*Nzr);
   ImagIMat(PETSC_COMM_WORLD, &D,6*Nzr);
@@ -276,8 +276,6 @@ int main(int argc, char **argv)
     VecDuplicate(epsSReal,&epsSinit);
     ArrayToVec(epsopt,epsSinit);
     MatMult(A,epsSinit,epsFinit);
-    VecPointwiseMult(epsFinit,epsFinit,epsDiff1);
-    VecAXPY(epsFinit,1.0,epsMed1);
     OutputVec(PETSC_COMM_WORLD,epsFinit,"epsFinit",".m");
     VecDestroy(&epsFinit);
     VecDestroy(&epsSinit);
