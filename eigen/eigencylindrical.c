@@ -65,6 +65,11 @@ int main(int argc, char **argv)
   hz=hr;
   hzr = hr*hz;
 
+  int multiplier;
+  PetscOptionsGetInt(PETSC_NULL,"-multiplier",&multiplier,&flg);
+  if(!flg) multiplier=1;
+  PetscPrintf(PETSC_COMM_WORLD,"------multiplier is: %d \n ",multiplier);
+  
   double freq1;
   PetscOptionsGetReal(PETSC_NULL,"-freq1",&freq1,&flg);
   if(!flg) freq1=1.0;
@@ -88,7 +93,12 @@ int main(int argc, char **argv)
   PetscOptionsGetString(PETSC_NULL,"-initdatfile",initialdatafile,PETSC_MAX_PATH_LEN,&flg); MyCheckAndOutputChar(flg,initialdatafile,"initialdatafile","Inputdata file");
 
   /*------Set up the A, C, D matrices--------------*/
-  myinterp(PETSC_COMM_WORLD,&A,Nr,Nz,Mr,Mz,mr0,mz0,Mzslab);      //from CenterWvgonSub.c
+  if(multiplier==1){
+    myinterp(PETSC_COMM_WORLD,&A,Nr,Nz,Mr,Mz,mr0,mz0,Mzslab);
+  }else{
+    myinterpmultiplier(PETSC_COMM_WORLD,&A,Nr,Nz,multiplier,DegFree,mr0,mz0,Mzslab);
+  }
+
   CongMat(PETSC_COMM_WORLD, &C, 6*Nzr);
   ImagIMat(PETSC_COMM_WORLD, &D,6*Nzr);
 

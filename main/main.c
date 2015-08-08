@@ -265,6 +265,24 @@ int main(int argc, char **argv)
   LDOSdataGroup ldos1data={omega1,ksp1,&its1,M1,b1,x1,J1conj,epsSReal,epsFReal,epsDiff1,epsMed1,epscoef1,ldos1grad,outputbase}; 
   /***Set up done***/
 
+  //Printout the initial epsfile
+  int printinitialeps=0;
+  PetscOptionsGetInt(PETSC_NULL,"-printinitialeps",&printinitialeps,&flg);
+  PetscPrintf(PETSC_COMM_WORLD,"----printinitialeps is: %d \n",printinitialeps);
+  if(printinitialeps){
+    Vec epsFinit;
+    Vec epsSinit;
+    VecDuplicate(vR,&epsFinit);
+    VecDuplicate(epsSReal,&epsSinit);
+    ArrayToVec(epsopt,epsSinit);
+    MatMult(A,epsSinit,epsFinit);
+    VecPointwiseMult(epsFinit,epsFinit,epsDiff1);
+    VecAXPY(epsFinit,1.0,epsMed1);
+    OutputVec(PETSC_COMM_WORLD,epsFinit,"epsFinit",".m");
+    VecDestroy(&epsFinit);
+    VecDestroy(&epsSinit);
+  }
+  
   int Job;
   PetscOptionsGetInt(PETSC_NULL,"-Job",&Job,&flg); MyCheckAndOutputInt(flg,Job,"Job","Job");
 
