@@ -168,7 +168,7 @@ PetscErrorCode GetMediumVec(Vec epsmedium,int Nz, int Mz, double epsair, double 
 
 #undef __FUNCT__ 
 #define __FUNCT__ "GetMediumVecwithSub"
-PetscErrorCode GetMediumVecwithSub(Vec epsmedium,int Nr, int Nz, int Mr, int Mz, double epsair, double epssub, int Mzslab)
+PetscErrorCode GetMediumVecwithSub(Vec epsmedium,int Nr, int Nz, int Mr, int Mz, double epsair, double epssub, int Mzslab, int mr0, int mz0)
 {
    PetscErrorCode ierr;
    int i, j, ir, iz, ns, ne;
@@ -181,14 +181,14 @@ PetscErrorCode GetMediumVecwithSub(Vec epsmedium,int Nr, int Nz, int Mr, int Mz,
 
        if (Mzslab==2){
 
-         if (ir<Mr)
+         if (ir<mr0+Mr)
 	   value = epssub;
          else
 	   value = epsair;
 
        }else{
 
-         if (iz<Nz/2 + Mz/2)
+         if (iz<mz0)
 	   value = epssub;
          else
 	   value = epsair;

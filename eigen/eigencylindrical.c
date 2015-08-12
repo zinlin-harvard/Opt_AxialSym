@@ -136,7 +136,7 @@ int main(int argc, char **argv)
   VecScale(vecQ,1.0/Qabs);
   VecAXPY(vecQ,1.0,vR);
   VecSet(epsDiff,epsilon);
-  GetMediumVecwithSub(epsmedium,Nr,Nz,Mr,Mz,epsair,epssub,Mzslab);  
+  GetMediumVecwithSub(epsmedium,Nr,Nz,Mr,Mz,epsair,epssub,Mzslab,mr0,mz0);  
 
   /*-----Set up epsSReal, epsFReal, vgradlocal ------*/
   ierr = MatCreateVecs(A,&epsSReal, &epsFReal); CHKERRQ(ierr);

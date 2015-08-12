@@ -93,7 +93,7 @@ PetscErrorCode GetDotMat(MPI_Comm comm, Mat *Bout, int c1, int c2, int Nr, int N
 PetscErrorCode ImagIMat(MPI_Comm comm, Mat *Dout, int N);
 PetscErrorCode CongMat(MPI_Comm comm, Mat *Cout, int N);
 PetscErrorCode GetMediumVec(Vec epsmedium,int Nz, int Mz, double epsair, double epssub);
-PetscErrorCode GetMediumVecwithSub(Vec epsmedium, int Nr, int Nz, int Mr, int Mz, double epsair, double epssub, int Mzslab);
+PetscErrorCode GetMediumVecwithSub(Vec epsmedium, int Nr, int Nz, int Mr, int Mz, double epsair, double epssub, int Mzslab, int mr0, int mz0);
 PetscErrorCode GetRealPartVec(Vec vR, int N);
 PetscErrorCode AddMuAbsorption(double *muinv, Vec muinvpml, double Qabs, int add);
 PetscErrorCode GetUnitVec(Vec ej, int pol, int N);

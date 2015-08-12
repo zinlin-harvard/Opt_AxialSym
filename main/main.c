@@ -192,8 +192,8 @@ int main(int argc, char **argv)
   VecPointwiseMult(epscoef2,epsDiff2,vecQ);
   VecScale(epscoef2,omega2*omega2);
 
-  GetMediumVecwithSub(epsMed1,Nr,Nz,Mr,Mz,epsair,epssub1,Mzslab);  
-  GetMediumVecwithSub(epsMed2,Nr,Nz,Mr,Mz,epsair,epssub2,Mzslab);  
+  GetMediumVecwithSub(epsMed1,Nr,Nz,Mr,Mz,epsair,epssub1,Mzslab,mr0,mz0);  
+  GetMediumVecwithSub(epsMed2,Nr,Nz,Mr,Mz,epsair,epssub2,Mzslab,mr0,mz0);  
 
   /*-----Set up epsSReal, epsFReal, vgradlocal ------*/
   Vec epsSReal, epsFReal;
@@ -286,6 +286,8 @@ int main(int argc, char **argv)
     VecDuplicate(epsSReal,&epsSinit);
     ArrayToVec(epsopt,epsSinit);
     MatMult(A,epsSinit,epsFinit);
+    VecPointwiseMult(epsFinit,epsFinit,epsDiff1);
+    VecAXPY(epsFinit,1.0,epsMed1);
     OutputVec(PETSC_COMM_WORLD,epsFinit,"epsFinit",".m");
     VecDestroy(&epsFinit);
     VecDestroy(&epsSinit);
