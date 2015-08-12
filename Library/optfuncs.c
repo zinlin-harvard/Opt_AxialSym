@@ -46,7 +46,7 @@ double optldos(int DegFree, double *epsopt, double *grad, void *data)
   Vec epscoef = ptdata->epscoef;
   Vec ldosgrad = ptdata->ldosgrad;
   int outputbase = ptdata->outputbase;
-
+  
   Vec epsgrad;
   VecDuplicate(epsSReal,&epsgrad);
   RegzProj(DegFree,epsopt,epsSReal,epsgrad,pSIMP,bproj,etaproj,kspH,Hfilt,&itsH);
@@ -127,7 +127,8 @@ double optfomshg(int DegFree, double *epsopt, double *grad, void *data)
   Vec ldos1grad = ptdata->ldos1grad;
   Vec betagrad = ptdata->betagrad;
   int outputbase = ptdata->outputbase;
-
+  Mat B = ptdata->B;
+  
   Vec epsgrad,tmpgrad,fomgrad;
   VecDuplicate(epsSReal,&epsgrad);
   VecDuplicate(epsSReal,&tmpgrad);
@@ -143,8 +144,12 @@ double optfomshg(int DegFree, double *epsopt, double *grad, void *data)
   ModifyMatDiag(Mtwo, D, epsFReal, epsDiff2, epsMed2, vecQ, omega2, Nr, 1, Nz);
 
   double ldos1=computeldos(ksp1,Mone,omega1,epsFReal,b1,J1conj,x1,epscoef1,ldos1grad,its1);
-  double beta=computebeta2(x1,ej,its2,ksp1,ksp2,Mone,Mtwo,omega1,omega2,epsFReal,epscoef1,epscoef2,betagrad);
-  double fom=beta/pow(ldos1,ldospowerindex);
+  double beta;
+    if(B)
+      beta=computebeta2crosspol(x1,B,its2,ksp1,ksp2,Mone,Mtwo,omega1,omega2,epsFReal,epscoef1,epscoef2,betagrad);
+    else
+      beta=computebeta2(x1,ej,its2,ksp1,ksp2,Mone,Mtwo,omega1,omega2,epsFReal,epscoef1,epscoef2,betagrad);
+    double fom=beta/pow(ldos1,ldospowerindex);
   PetscPrintf(PETSC_COMM_WORLD,"----********the current fom at step %.5d is %.16e \n",count,fom);
 
   VecScale(betagrad,1.0/pow(ldos1,ldospowerindex));

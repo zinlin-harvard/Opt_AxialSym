@@ -85,6 +85,16 @@ int main(int argc, char **argv)
   PetscOptionsGetInt(PETSC_NULL,"-ptsrcdir",&ptsrcdir,&flg);  MyCheckAndOutputInt(flg,ptsrcdir,"ptsrcdir","ptsrcdir");
   PetscOptionsGetReal(PETSC_NULL,"-Jmag",&Jmag,&flg);  MyCheckAndOutputDouble(flg,Jmag,"Jmag","Jmag");
 
+  int ptsrc2r, ptsrc2z, ptsrc2dir;
+  PetscOptionsGetInt(PETSC_NULL,"-ptsrc2r",&ptsrc2r,&flg);
+  if(!flg) ptsrc2r=ptsrcr;
+  PetscOptionsGetInt(PETSC_NULL,"-ptsrc2z",&ptsrc2z,&flg); 
+  if(!flg) ptsrc2z=ptsrcz;
+  PetscOptionsGetInt(PETSC_NULL,"-ptsrc2dir",&ptsrc2dir,&flg);
+  if(!flg) ptsrc2dir=ptsrcdir;
+  PetscPrintf(PETSC_COMM_WORLD,"----ptsrc2r, ptsrc2z, and ptsrc2dir: %d, %d, %d \n", ptsrc2r, ptsrc2z, ptsrc2dir);
+
+  
   char initialdatafile[PETSC_MAX_PATH_LEN];
   PetscOptionsGetString(PETSC_NULL,"-filenameprefix",filenameComm,PETSC_MAX_PATH_LEN,&flg); MyCheckAndOutputChar(flg,filenameComm,"filenameComm","Filename prefix");
   PetscOptionsGetString(PETSC_NULL,"-initdatfile",initialdatafile,PETSC_MAX_PATH_LEN,&flg); MyCheckAndOutputChar(flg,initialdatafile,"initialdatafile","Inputdata file");
@@ -359,8 +369,12 @@ werindex");
   if(ptsrcdir==2) VecCopy(unitp,ej);
   if(ptsrcdir==3) VecCopy(unitz,ej);
 
-  SHGdataGroup shgdata={ldospowerindex,omega1,omega2,ksp1,ksp2,&its1,&its2,M1,M2,b1,x1,ej,J1conj,epsSReal,epsFReal,epsDiff1,epsDiff2,epsMed1,epsMed2,epscoef1,epscoef2,ldos1grad,betagrad,outputbase};
-
+  SHGdataGroup shgdata={ldospowerindex,omega1,omega2,ksp1,ksp2,&its1,&its2,M1,M2,b1,x1,ej,J1conj,epsSReal,epsFReal,epsDiff1,epsDiff2,epsMed1,epsMed2,epscoef1,epscoef2,ldos1grad,betagrad,outputbase,PETSC_NULL};
+  if(ptsrc2dir!=ptsrcdir){
+    GetDotMat(PETSC_COMM_WORLD,&B,ptsrc2dir-1,ptsrcdir-1,Nr,Nz); 
+    shgdata.B=B;
+  }  
+  
   if (optJob==1){
     nlopt_set_max_objective(opt,optldos,&ldos1data);
   }else if (optJob==2){
@@ -424,8 +438,12 @@ if (Job==2){
     if(ptsrcdir==2) VecCopy(unitp,ej);
     if(ptsrcdir==3) VecCopy(unitz,ej);
 
-    SHGdataGroup shgdata={ldospowerindex,omega1,omega2,ksp1,ksp2,&its1,&its2,M1,M2,b1,x1,ej,J1conj,epsSReal,epsFReal,epsDiff1,epsDiff2,epsMed1,epsMed2,epscoef1,epscoef2,ldos1grad,betagrad,outputbase};
-
+    SHGdataGroup shgdata={ldospowerindex,omega1,omega2,ksp1,ksp2,&its1,&its2,M1,M2,b1,x1,ej,J1conj,epsSReal,epsFReal,epsDiff1,epsDiff2,epsMed1,epsMed2,epscoef1,epscoef2,ldos1grad,betagrad,outputbase,PETSC_NULL};
+    if(ptsrc2dir!=ptsrcdir){
+      GetDotMat(PETSC_COMM_WORLD,&B,ptsrc2dir-1,ptsrcdir-1,Nr,Nz); 
+      shgdata.B=B;
+    }  
+    
     for (epscen=s1;epscen<s2;epscen+=ds)
       {
 	epsopt[epsoptj]=epscen;
@@ -487,6 +505,7 @@ if (Job==2){
 
 /* ----------------------Destroy Vecs and Mats----------------------------*/ 
   ierr = MatDestroy(&A); CHKERRQ(ierr);
+  ierr = MatDestroy(&B); CHKERRQ(ierr);
   ierr = MatDestroy(&C); CHKERRQ(ierr);
   ierr = MatDestroy(&D); CHKERRQ(ierr);
   ierr = MatDestroy(&M1); CHKERRQ(ierr);  

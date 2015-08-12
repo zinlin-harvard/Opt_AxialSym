@@ -46,6 +46,7 @@ typedef struct{
   Vec ldos1grad;
   Vec betagrad;
   int outputbase;
+  Mat B;
 } SHGdataGroup;
 
 typedef struct
@@ -135,6 +136,9 @@ double computeldos(KSP ksp, Mat Mopr, double omega, Vec epsFReal, Vec b, Vec Jco
 
 // from shg.c
 double computebeta2(Vec x1, Vec ej, int *its, KSP ksp1, KSP ksp2, Mat Mone, Mat Mtwo, double omega1, double omega2, Vec epsFReal, Vec epscoef1, Vec epscoef2, Vec betagrad);
+
+// from shgcrosspol.c
+double computebeta2crosspol(Vec x1, Mat B, int *its, KSP ksp1, KSP ksp2, Mat Mone, Mat Mtwo, double omega1, double omega2, Vec epsFReal, Vec epscoef1, Vec epscoef2, Vec betagrad);
 
 // from optfuncs.c
 double optldos(int DegFree, double *epsopt, double *grad, void *data);

@@ -1,4 +1,4 @@
-all: MoperatorCylwithZsym.o SourceGeneration.o MathTools.o MatVecMaker.o Output.o mympisetup.o filters.o ldos.o optfuncs.o shg.o eigsolver.o lvs1d.o
+all: MoperatorCylwithZsym.o SourceGeneration.o MathTools.o MatVecMaker.o Output.o mympisetup.o filters.o ldos.o optfuncs.o shg.o shgcrosspol.o eigsolver.o lvs1d.o
 
 export PETSC_DIR=/home/zlin/MyLocal/petsc-3.6.0
 export PETSC_ARCH=arch-opt
@@ -7,7 +7,7 @@ export SLEPC_DIR=/home/zlin/MyLocal/slepc-3.6.0
 include ${PETSC_DIR}/lib/petsc/conf/variables
 include ${PETSC_DIR}/lib/petsc/conf/rules
 include ${SLEPC_DIR}/lib/slepc/conf/slepc_common
-CLEANFILES =  MoperatorCylwithZsym.o SourceGeneration.o MathTools.o MatVecMaker.o Output.o mympisetup.o filters.o ldos.o optfuncs.o shg.o eigsolver.o lvs1d.o
+CLEANFILES =  MoperatorCylwithZsym.o SourceGeneration.o MathTools.o MatVecMaker.o Output.o mympisetup.o filters.o ldos.o optfuncs.o shg.o shgcrosspol.o eigsolver.o lvs1d.o
 
 MoperatorCylwithZsym: MoperatorCylwithZsym.o
 	$(CLINKER) -Wall -g -o $@ MoperatorCylwithZsym.o 
@@ -27,6 +27,8 @@ ldos:ldos.o
 	$(CLINKER) -Wall -g -o $@ ldos.o
 shg:shg.o
 	$(CLINKER) -Wall -g -o $@ shg.o
+shgcrosspol:shgcrosspol.o
+	$(CLINKER) -Wall -g -o $@ shgcrosspol.o
 optfuncs:optfuncs.o
 	$(CLINKER) -Wall -g -o $@ optfuncs.o
 eigsolver:eigsolver.o
