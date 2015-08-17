@@ -217,6 +217,29 @@ int main(int argc, char **argv)
   else
     PetscPrintf(PETSC_COMM_WORLD," Please specify correct direction of point source current: x (1) , y (2) or z (3)\n "); 
 
+  int Jopt=0;
+  PetscOptionsGetInt(PETSC_NULL,"-Jopt",&Jopt,&flg);
+  PetscPrintf(PETSC_COMM_WORLD,"----Jopt is: %d \n",Jopt);
+  if(Jopt){
+
+    VecSet(ptsrc,0.0);
+    double *inJ;
+    FILE *Jptf;
+    inJ = (double *) malloc(6*Nr*Nz*sizeof(double));
+    Jptf = fopen("Jinput.txt","r");
+    int inJi;
+    for (inJi=0;inJi<6*Nr*Nz;inJi++)
+      {
+	fscanf(Jptf,"%lf",&inJ[inJi]);
+      }
+    fclose(Jptf);
+
+    ArrayToVec(inJ,ptsrc);
+
+    free(inJ);
+
+  }
+  
   /*--------Create index sets for the vec scatter -------*/
   ierr =ISCreateStride(PETSC_COMM_SELF,DegFree,0,1,&from); CHKERRQ(ierr);
   ierr =ISCreateStride(PETSC_COMM_SELF,DegFree,0,1,&to); CHKERRQ(ierr);
