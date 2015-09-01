@@ -14,23 +14,25 @@ extern Vec vR, vecRad, vecQ, weight;
 
 #undef __FUNCT__ 
 #define __FUNCT__ "computebeta2crosspol"
-double computebeta2crosspol(Vec x1, Mat B, int *its, KSP ksp1, KSP ksp2, Mat Mone, Mat Mtwo, double omega1, double omega2, Vec epsFReal, Vec epscoef1, Vec epscoef2, Vec betagrad)
+double computebeta2crosspol(Vec x1, Vec x2, Mat B, int *its, KSP ksp1, KSP ksp2, Mat Mone, Mat Mtwo, double omega1, double omega2, Vec epsFReal, Vec epscoef1, Vec epscoef2, Vec betagrad, Vec vecNL)
 {
   
   PetscErrorCode ierr;
   double hzr=hr*hz;
   PetscPrintf(PETSC_COMM_WORLD,"----Calculating Second Harmonic Power and derivative (WITH cross polarizations)------ \n");
 
-  Vec x1B, J2, J2conj, b2, x2;
+  Vec x1B, J2, J2conj, b2;
   VecDuplicate(vR,&x1B);
   VecDuplicate(vR,&J2);
   VecDuplicate(vR,&J2conj);
   VecDuplicate(vR,&b2);
-  VecDuplicate(vR,&x2);
 
   MatMult(B,x1,x1B);
   CmpVecProd(x1B,x1B,J2);
-  VecPointwiseMult(J2,J2,epsFReal);
+  if(vecNL) 
+    VecPointwiseMult(J2,J2,vecNL);
+  else
+    VecPointwiseMult(J2,J2,epsFReal);
   MatMult(C,J2,J2conj);
   MatMult(D,J2,b2);
   VecScale(b2,omega2);
@@ -68,7 +70,10 @@ double computebeta2crosspol(Vec x1, Mat B, int *its, KSP ksp1, KSP ksp2, Mat Mon
   //Uone = B^T * eps * 2 * x1B * conj(x2);
   ierr = MatMult(C,x2,tmp); CHKERRQ(ierr);
   CmpVecProd(tmp,x1B,u1);
-  ierr = VecPointwiseMult(u1,u1,epsFReal); CHKERRQ(ierr);
+  if(vecNL)
+    ierr = VecPointwiseMult(u1,u1,vecNL);
+  else
+    ierr = VecPointwiseMult(u1,u1,epsFReal);
   VecScale(u1,2.0);
   MatMultTranspose(B,u1,Uone);
   VecSet(u1,0.0);
@@ -91,7 +96,10 @@ double computebeta2crosspol(Vec x1, Mat B, int *its, KSP ksp1, KSP ksp2, Mat Mon
 
   //Uthree = B^T * 2 * eps * x1B * u2;
   CmpVecProd(x1B,u2,u3);
-  ierr = VecPointwiseMult(u3,u3,epsFReal); CHKERRQ(ierr);
+  if(vecNL)
+    ierr = VecPointwiseMult(u3,u3,vecNL);
+  else
+    ierr = VecPointwiseMult(u3,u3,epsFReal); 
   VecScale(u3,2.0);
   MatMultTranspose(B,u3,Uthree);
   VecSet(u3,0.0);
@@ -107,7 +115,8 @@ double computebeta2crosspol(Vec x1, Mat B, int *its, KSP ksp1, KSP ksp2, Mat Mon
   CmpVecProd(x1B,x1B,x1Bsq);
   MatMult(C,x1Bsq,tmp);
   CmpVecProd(tmp,x2,Grad0);
-
+  if(vecNL) VecScale(Grad0,0);
+  
   //Grad1 = conj( u1 epscoef1 x1 );
   CmpVecProd(epscoef1,x1,Grad1);
   CmpVecProd(Grad1,u1,tmp);
@@ -121,6 +130,7 @@ double computebeta2crosspol(Vec x1, Mat B, int *its, KSP ksp1, KSP ksp2, Mat Mon
   CmpVecProd(x1Bsq,u2,tmp);
   MatMult(D,tmp,Grad3);
   VecScale(Grad3,omega2);
+  if(vecNL) VecScale(Grad3,0);
 
   //Grad4 = i*omega2 * u3 * epscoef1 * x1;
   CmpVecProd(x1,epscoef1,Grad4);
@@ -146,7 +156,6 @@ double computebeta2crosspol(Vec x1, Mat B, int *its, KSP ksp1, KSP ksp2, Mat Mon
   VecDestroy(&J2);
   VecDestroy(&J2conj);
   VecDestroy(&b2);
-  VecDestroy(&x2);
   VecDestroy(&tmp);
   VecDestroy(&Uone);
   VecDestroy(&Utwo);

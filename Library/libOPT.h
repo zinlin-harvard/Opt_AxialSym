@@ -19,6 +19,8 @@ typedef struct{
   Vec epscoef;
   Vec ldosgrad;
   int outputbase;
+  Vec W;
+  double expW;
 } LDOSdataGroup;
 
 typedef struct{
@@ -47,6 +49,9 @@ typedef struct{
   Vec betagrad;
   int outputbase;
   Mat B;
+  Vec W;
+  double expW;
+  Vec vecNL;
 } SHGdataGroup;
 
 typedef struct
@@ -135,10 +140,13 @@ PetscErrorCode MuinvPMLFull(MPI_Comm comm, Vec *muinvout, int Nx, int Ny, int Nz
 double computeldos(KSP ksp, Mat Mopr, double omega, Vec epsFReal, Vec b, Vec Jconj, Vec x, Vec epscoef, Vec ldosgrad, int *its);
 
 // from shg.c
-double computebeta2(Vec x1, Vec ej, int *its, KSP ksp1, KSP ksp2, Mat Mone, Mat Mtwo, double omega1, double omega2, Vec epsFReal, Vec epscoef1, Vec epscoef2, Vec betagrad);
+double computebeta2(Vec x1, Vec x2, Vec ej, int *its, KSP ksp1, KSP ksp2, Mat Mone, Mat Mtwo, double omega1, double omega2, Vec epsFReal, Vec epscoef1, Vec epscoef2, Vec betagrad, Vec vecNL);
 
 // from shgcrosspol.c
-double computebeta2crosspol(Vec x1, Mat B, int *its, KSP ksp1, KSP ksp2, Mat Mone, Mat Mtwo, double omega1, double omega2, Vec epsFReal, Vec epscoef1, Vec epscoef2, Vec betagrad);
+double computebeta2crosspol(Vec x1, Vec x2, Mat B, int *its, KSP ksp1, KSP ksp2, Mat Mone, Mat Mtwo, double omega1, double omega2, Vec epsFReal, Vec epscoef1, Vec epscoef2, Vec betagrad, Vec vecNL);
+
+// from fieldfuncs.c
+double funcWdotEabs(KSP ksp, Vec W, Vec epscoef, Vec grad, double omega);
 
 // from optfuncs.c
 double optldos(int DegFree, double *epsopt, double *grad, void *data);

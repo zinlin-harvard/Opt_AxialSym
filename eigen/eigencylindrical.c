@@ -87,6 +87,15 @@ int main(int argc, char **argv)
   if(!flg) epssub=epsair;
   if(flg) MyCheckAndOutputDouble(flg,epssub,"epssub","epssub"); 
 
+  char epsmedfile[PETSC_MAX_PATH_LEN];
+  PetscOptionsGetString(PETSC_NULL,"-epsmedfilename",epsmedfile,PETSC_MAX_PATH_LEN,&flg);
+  if(!flg) strcpy(epsmedfile,"");
+
+  if(strcmp(epsmedfile,"")==0)
+    PetscPrintf(PETSC_COMM_WORLD,"----epsmedfile is  empty. \n");
+  else
+    PetscPrintf(PETSC_COMM_WORLD,"----epsmedfile is %s \n",epsmedfile);
+
   Qabs=1.0/0.0;
 
   char initialdatafile[PETSC_MAX_PATH_LEN];
@@ -136,8 +145,24 @@ int main(int argc, char **argv)
   VecScale(vecQ,1.0/Qabs);
   VecAXPY(vecQ,1.0,vR);
   VecSet(epsDiff,epsilon);
-  GetMediumVecwithSub(epsmedium,Nr,Nz,Mr,Mz,epsair,epssub,Mzslab,mr0,mz0);  
 
+  int i;
+  if(strcmp(epsmedfile,"")==0){
+    GetMediumVecwithSub(epsmedium,Nr,Nz,Mr,Mz,epsair,epssub,Mzslab,mr0,mz0);  
+  }else{
+    double *epsmedarray;
+    FILE *medfile;
+    epsmedarray = (double *)malloc(6*Nz*Nr*sizeof(double));
+    medfile=fopen(epsmedfile,"r");
+    for(i=0;i<6*Nz*Nr;i++){
+      fscanf(medfile,"%lf",&epsmedarray[i]);
+    }
+    ArrayToVec(epsmedarray,epsmedium);
+    fclose(medfile);
+    free(epsmedarray);
+  }
+
+  
   /*-----Set up epsSReal, epsFReal, vgradlocal ------*/
   ierr = MatCreateVecs(A,&epsSReal, &epsFReal); CHKERRQ(ierr);
   
@@ -153,7 +178,6 @@ int main(int argc, char **argv)
   epsopt = (double *) malloc(DegFree*sizeof(double));
   ptf = fopen(initialdatafile,"r");
   PetscPrintf(PETSC_COMM_WORLD,"reading from input files \n");
-  int i;
   for (i=0;i<DegFree;i++)
     { 
       fscanf(ptf,"%lf",&epsopt[i]);
