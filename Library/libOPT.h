@@ -145,12 +145,15 @@ double computebeta2(Vec x1, Vec x2, Vec ej, int *its, KSP ksp1, KSP ksp2, Mat Mo
 // from shgcrosspol.c
 double computebeta2crosspol(Vec x1, Vec x2, Mat B, int *its, KSP ksp1, KSP ksp2, Mat Mone, Mat Mtwo, double omega1, double omega2, Vec epsFReal, Vec epscoef1, Vec epscoef2, Vec betagrad, Vec vecNL);
 
+// from thg.c
+double computebetathg(Vec x1, Vec x2, Vec ej, int *its, KSP ksp1, KSP ksp2, Mat Mone, Mat Mtwo, double omega1, double omega2, Vec epsFReal, Vec epscoef1, Vec epscoef2, Vec betagrad, Vec vecNL);
+
 // from fieldfuncs.c
 double funcWdotEabs(KSP ksp, Vec W, Vec epscoef, Vec grad, double omega);
 
 // from optfuncs.c
 double optldos(int DegFree, double *epsopt, double *grad, void *data);
-double optfomshg(int DegFree, double *epsopt, double *grad, void *data);
+double optfomnfc(int DegFree, double *epsopt, double *grad, void *data);
 
 // from lvs1d.c
 void struc2lsf_1d(int *struc, double *lsf, int n);

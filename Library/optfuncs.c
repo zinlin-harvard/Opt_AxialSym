@@ -111,13 +111,13 @@ double optldos(int DegFree, double *epsopt, double *grad, void *data)
 }
 
 #undef __FUNCT__
-#define __FUNCT__ "optfomshg"
-double optfomshg(int DegFree, double *epsopt, double *grad, void *data)
+#define __FUNCT__ "optfomnfc"
+double optfomnfc(int DegFree, double *epsopt, double *grad, void *data)
 {
 
   PetscErrorCode ierr;
 
-  PetscPrintf(PETSC_COMM_WORLD,"********Entering the SHG FOM solver.********** \n");
+  PetscPrintf(PETSC_COMM_WORLD,"********Entering the NFC FOM solver.********** \n");
 
   SHGdataGroup *ptdata = (SHGdataGroup *) data;
 
@@ -169,11 +169,15 @@ double optfomshg(int DegFree, double *epsopt, double *grad, void *data)
 
   double ldos1=computeldos(ksp1,Mone,omega1,epsFReal,b1,J1conj,x1,epscoef1,ldos1grad,its1);
   double beta;
+  if(omega2>2*omega1){
+      beta=computebetathg(x1,x2,ej,its2,ksp1,ksp2,Mone,Mtwo,omega1,omega2,epsFReal,epscoef1,epscoef2,betagrad,vecNL);
+  }else{
     if(B)
       beta=computebeta2crosspol(x1,x2,B,its2,ksp1,ksp2,Mone,Mtwo,omega1,omega2,epsFReal,epscoef1,epscoef2,betagrad,vecNL);
     else
       beta=computebeta2(x1,x2,ej,its2,ksp1,ksp2,Mone,Mtwo,omega1,omega2,epsFReal,epscoef1,epscoef2,betagrad,vecNL);
-
+  }
+  
   double fom=beta/pow(ldos1,ldospowerindex);
 
   VecScale(betagrad,1.0/pow(ldos1,ldospowerindex));

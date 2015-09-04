@@ -405,7 +405,7 @@ int main(int argc, char **argv)
   PetscOptionsGetInt(PETSC_NULL,"-Job",&Job,&flg); MyCheckAndOutputInt(flg,Job,"Job","Job");
 
   int optJob;
-  PetscOptionsGetInt(PETSC_NULL,"-optJob",&optJob,&flg); MyCheckAndOutputInt(flg,optJob,"optJob","--------optJob option (1 single LDOS, 2 SHG, 3 THG) ");
+  PetscOptionsGetInt(PETSC_NULL,"-optJob",&optJob,&flg); MyCheckAndOutputInt(flg,optJob,"optJob","--------optJob option (1 single LDOS, 2 NFC) ");
 
 if (Job==1){
   /*---------Optimization--------*/
@@ -495,7 +495,7 @@ werindex");
   if (optJob==1){
     nlopt_set_max_objective(opt,optldos,&ldos1data);
   }else if (optJob==2){
-    nlopt_set_max_objective(opt,optfomshg,&shgdata);
+    nlopt_set_max_objective(opt,optfomnfc,&shgdata);
   }
 
   result = nlopt_optimize(opt,epsopt,&maxf);
@@ -571,7 +571,7 @@ if (Job==2){
     for (epscen=s1;epscen<s2;epscen+=ds)
       {
 	epsopt[epsoptj]=epscen;
-	beta = optfomshg(DegFree,epsopt,grad,&shgdata);
+	beta = optfomnfc(DegFree,epsopt,grad,&shgdata);
 	PetscPrintf(PETSC_COMM_WORLD,"epscen: %g beta: %g beta-grad: %g \n", epsopt[epsoptj], beta, grad[epsoptj]);
       }
 
@@ -606,7 +606,7 @@ if (Job==2){
      if(ptsrcdir==3) VecCopy(unitz,ej);
 
      SHGdataGroup shgdata={ldospowerindex,omega1,omega2,ksp1,ksp2,&its1,&its2,M1,M2,b1,x1,ej,J1conj,epsSReal,epsFReal,epsDiff1,epsDiff2,epsMed1,epsMed2,epscoef1,epscoef2,ldos1grad,betagrad,outputbase};
-     maxf=lvs1d_opt(optfomshg,DegFree,epsopt,grad,&shgdata,maxeval,dt,steplength);
+     maxf=lvs1d_opt(optfomnfc,DegFree,epsopt,grad,&shgdata,maxeval,dt,steplength);
 
      VecDestroy(&ej);
      VecDestroy(&betagrad);
