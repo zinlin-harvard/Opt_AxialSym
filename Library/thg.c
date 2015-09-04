@@ -13,22 +13,24 @@ extern Mat A,C,D;
 extern Vec vR, vecRad, vecQ, weight;
 
 #undef __FUNCT__ 
-#define __FUNCT__ "computebeta2"
-double computebeta2(Vec x1, Vec x2, Vec ej, int *its, KSP ksp1, KSP ksp2, Mat Mone, Mat Mtwo, double omega1, double omega2, Vec epsFReal, Vec epscoef1, Vec epscoef2, Vec betagrad, Vec vecNL)
+#define __FUNCT__ "computebetathg"
+double computebetathg(Vec x1, Vec x2, Vec ej, int *its, KSP ksp1, KSP ksp2, Mat Mone, Mat Mtwo, double omega1, double omega2, Vec epsFReal, Vec epscoef1, Vec epscoef2, Vec betagrad, Vec vecNL)
 {
   
   PetscErrorCode ierr;
   double hzr=hr*hz;
-  PetscPrintf(PETSC_COMM_WORLD,"----Calculating Second Harmonic Power and derivative------ \n");
+  PetscPrintf(PETSC_COMM_WORLD,"----Calculating Third Harmonic Power and derivative------ \n");
 
-  Vec x1j, J2, J2conj, b2;
+  Vec x1j, J2, J2conj, b2, tmp;
+  VecDuplicate(vR,&tmp);
   VecDuplicate(vR,&x1j);
   VecDuplicate(vR,&J2);
   VecDuplicate(vR,&J2conj);
   VecDuplicate(vR,&b2);
 
   VecPointwiseMult(x1j,x1,ej);
-  CmpVecProd(x1j,x1j,J2);
+  CmpVecProd(x1j,x1j,tmp);
+  CmpVecProd(tmp,x1j,J2);
   if(vecNL)
     VecPointwiseMult(J2,J2,vecNL);
   else
@@ -42,19 +44,17 @@ double computebeta2(Vec x1, Vec x2, Vec ej, int *its, KSP ksp1, KSP ksp2, Mat Mo
    
   /*-------------Calculate and print out the beta2----------*/
   double betar, betai, beta;
-  Vec tmp;
-  VecDuplicate(vR,&tmp);
   VecPointwiseMult(tmp,J2conj,vecRad);
   VecPointwiseMult(tmp,tmp,weight);
   CmpVecDot(tmp,x2,&betar,&betai);
   beta=-1.0*hzr*betar;
-  PetscPrintf(PETSC_COMM_WORLD,"---*****The current beta2 at frequency %g and step %.5d is %.16e \n",omega2/(2.0*PI),count,beta);
+  PetscPrintf(PETSC_COMM_WORLD,"---*****The current betathg at frequency %g and step %.5d is %.16e \n",omega2/(2.0*PI),count,beta);
 
   int rank;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   double t1,t2,tpast;
   //Calculate the derivative
-  Vec Uone, Utwo, Uthree, u1, u2, u3, Grad0, Grad1, Grad2, Grad3, Grad4, x1jsq;
+  Vec Uone, Utwo, Uthree, u1, u2, u3, Grad0, Grad1, Grad2, Grad3, Grad4, x1jcube;
   VecDuplicate(vR,&Uone);
   VecDuplicate(vR,&Utwo);
   VecDuplicate(vR,&Uthree);
@@ -66,17 +66,18 @@ double computebeta2(Vec x1, Vec x2, Vec ej, int *its, KSP ksp1, KSP ksp2, Mat Mo
   VecDuplicate(vR,&Grad2);
   VecDuplicate(vR,&Grad3);
   VecDuplicate(vR,&Grad4);
-  VecDuplicate(vR,&x1jsq);
+  VecDuplicate(vR,&x1jcube);
 
-  //Uone = eps * 2 * x1j * conj(x2) * ej;
-  ierr = MatMult(C,x2,tmp); CHKERRQ(ierr);
+  //Uone = eps * 3 * x1j * x1j * conj(x2) * ej;
+  ierr = MatMult(C,x2,Uone); CHKERRQ(ierr);
+  CmpVecProd(Uone,x1j,tmp);
   CmpVecProd(tmp,x1j,Uone);
   ierr = VecPointwiseMult(Uone,Uone,ej); CHKERRQ(ierr);
   if (vecNL)
     ierr = VecPointwiseMult(Uone,Uone,vecNL);
   else
     ierr = VecPointwiseMult(Uone,Uone,epsFReal);
-  VecScale(Uone,2.0);
+  VecScale(Uone,3.0);
 
   ierr = Ptime(&t1);CHKERRQ(ierr);
   ierr = KSPSolve(ksp1,Uone,u1);CHKERRQ(ierr);
@@ -94,14 +95,16 @@ double computebeta2(Vec x1, Vec x2, Vec ej, int *its, KSP ksp1, KSP ksp2, Mat Mo
   if(rank==0)
     PetscPrintf(PETSC_COMM_SELF,"---The runing time for solving Mtwo * u2 = Utwo is %f s \n",tpast);
 
-  //Uthree = 2 * eps * x1j * u2 * ej;
-  CmpVecProd(x1j,u2,Uthree);
+  //Uthree = 3 * eps * x1j * x1j * u2 * ej;
+  CmpVecProd(x1j,x1j,tmp);
+  CmpVecProd(tmp,u2,Uthree);
+  VecPointwiseMult(Uthree,Uthree,ej);
   if(vecNL)
     ierr = VecPointwiseMult(Uthree,Uthree,vecNL); 
   else
     ierr = VecPointwiseMult(Uthree,Uthree,epsFReal);
   ierr = VecPointwiseMult(Uthree,Uthree,ej); CHKERRQ(ierr);
-  VecScale(Uthree,2.0);
+  VecScale(Uthree,3.0);
 
   ierr = Ptime(&t1);CHKERRQ(ierr);
   ierr = KSPSolve(ksp1,Uthree,u3);CHKERRQ(ierr);
@@ -110,9 +113,10 @@ double computebeta2(Vec x1, Vec x2, Vec ej, int *its, KSP ksp1, KSP ksp2, Mat Mo
   if(rank==0)
     PetscPrintf(PETSC_COMM_SELF,"---The runing time for solving Mone * u3 = Uthree is %f s \n",tpast);
 
-  //Grad0 = conj(x1j)^2 * ej * x2;
-  CmpVecProd(x1j,x1j,x1jsq);
-  MatMult(C,x1jsq,tmp);
+  //Grad0 = conj(x1j)^3 * ej * x2;
+  CmpVecProd(x1j,x1j,tmp);
+  CmpVecProd(tmp,x1j,x1jcube);
+  MatMult(C,x1jcube,tmp);
   CmpVecProd(tmp,x2,Grad0);
   VecPointwiseMult(Grad0,Grad0,ej);
   if(vecNL) VecScale(Grad0,0);
@@ -126,8 +130,8 @@ double computebeta2(Vec x1, Vec x2, Vec ej, int *its, KSP ksp1, KSP ksp2, Mat Mo
   CmpVecProd(epscoef2,x2,tmp);
   CmpVecProd(tmp,u2,Grad2);
 
-  //Grad3 = i*omega2 * x1j^2 * u2 * ej;
-  CmpVecProd(x1jsq,u2,tmp);
+  //Grad3 = i*omega2 * x1j^3 * u2 * ej;
+  CmpVecProd(x1jcube,u2,tmp);
   MatMult(D,tmp,Grad3);
   VecPointwiseMult(Grad3,Grad3,ej);
   VecScale(Grad3,omega2);
@@ -169,7 +173,7 @@ double computebeta2(Vec x1, Vec x2, Vec ej, int *its, KSP ksp1, KSP ksp2, Mat Mo
   VecDestroy(&Grad2);
   VecDestroy(&Grad3);
   VecDestroy(&Grad4);
-  VecDestroy(&x1jsq);
+  VecDestroy(&x1jcube);
 
   return beta;
 }

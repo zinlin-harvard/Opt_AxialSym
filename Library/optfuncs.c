@@ -46,7 +46,9 @@ double optldos(int DegFree, double *epsopt, double *grad, void *data)
   Vec epscoef = ptdata->epscoef;
   Vec ldosgrad = ptdata->ldosgrad;
   int outputbase = ptdata->outputbase;
-
+  Vec W = ptdata->W;
+  double expW = ptdata->expW;
+  
   Vec epsgrad;
   VecDuplicate(epsSReal,&epsgrad);
   RegzProj(DegFree,epsopt,epsSReal,epsgrad,pSIMP,bproj,etaproj,kspH,Hfilt,&itsH);
@@ -58,6 +60,22 @@ double optldos(int DegFree, double *epsopt, double *grad, void *data)
   ModifyMatDiag(Mopr, D, epsFReal, epsDiff, epsMed, vecQ, omega, Nr, 1, Nz);
   
   double ldos=computeldos(ksp,Mopr,omega,epsFReal,b,Jconj,x,epscoef,ldosgrad,its);
+  if(W){
+    double wdote;
+    Vec wdote_grad;
+    VecDuplicate(ldosgrad,&wdote_grad);
+
+    wdote=funcWdotEabs(ksp,W,epscoef,wdote_grad,omega);
+    double ldos_normalized=ldos/cpow(wdote,expW);
+    VecScale(ldosgrad,1.0/cpow(wdote,expW));
+    VecAXPY(ldosgrad,-1.0*(expW)*ldos/cpow(wdote,expW+1),wdote_grad);
+    ldos = ldos_normalized;
+
+    VecDestroy(&wdote_grad);
+  }
+
+  PetscPrintf(PETSC_COMM_WORLD,"----********the current ldos(_normalized) at step %.5d is %.16e \n",count,ldos);
+  
   ierr=VecPointwiseMult(ldosgrad,ldosgrad,epsgrad); CHKERRQ(ierr);
   KSPSolveTranspose(kspH,ldosgrad,epsgrad);
   ierr = VecToArray(epsgrad,grad,scatter,from,to,vgradlocal,DegFree);
@@ -93,13 +111,13 @@ double optldos(int DegFree, double *epsopt, double *grad, void *data)
 }
 
 #undef __FUNCT__
-#define __FUNCT__ "optfomshg"
-double optfomshg(int DegFree, double *epsopt, double *grad, void *data)
+#define __FUNCT__ "optfomnfc"
+double optfomnfc(int DegFree, double *epsopt, double *grad, void *data)
 {
 
   PetscErrorCode ierr;
 
-  PetscPrintf(PETSC_COMM_WORLD,"********Entering the SHG FOM solver.********** \n");
+  PetscPrintf(PETSC_COMM_WORLD,"********Entering the NFC FOM solver.********** \n");
 
   SHGdataGroup *ptdata = (SHGdataGroup *) data;
 
@@ -127,7 +145,14 @@ double optfomshg(int DegFree, double *epsopt, double *grad, void *data)
   Vec ldos1grad = ptdata->ldos1grad;
   Vec betagrad = ptdata->betagrad;
   int outputbase = ptdata->outputbase;
-
+  Mat B = ptdata->B;
+  Vec W = ptdata->W;
+  double expW = ptdata->expW;
+  Vec vecNL = ptdata->vecNL;
+  
+  Vec x2;
+  VecDuplicate(vR,&x2);
+  
   Vec epsgrad,tmpgrad,fomgrad;
   VecDuplicate(epsSReal,&epsgrad);
   VecDuplicate(epsSReal,&tmpgrad);
@@ -143,13 +168,37 @@ double optfomshg(int DegFree, double *epsopt, double *grad, void *data)
   ModifyMatDiag(Mtwo, D, epsFReal, epsDiff2, epsMed2, vecQ, omega2, Nr, 1, Nz);
 
   double ldos1=computeldos(ksp1,Mone,omega1,epsFReal,b1,J1conj,x1,epscoef1,ldos1grad,its1);
-  double beta=computebeta2(x1,ej,its2,ksp1,ksp2,Mone,Mtwo,omega1,omega2,epsFReal,epscoef1,epscoef2,betagrad);
+  double beta;
+  if(omega2>2*omega1){
+      beta=computebetathg(x1,x2,ej,its2,ksp1,ksp2,Mone,Mtwo,omega1,omega2,epsFReal,epscoef1,epscoef2,betagrad,vecNL);
+  }else{
+    if(B)
+      beta=computebeta2crosspol(x1,x2,B,its2,ksp1,ksp2,Mone,Mtwo,omega1,omega2,epsFReal,epscoef1,epscoef2,betagrad,vecNL);
+    else
+      beta=computebeta2(x1,x2,ej,its2,ksp1,ksp2,Mone,Mtwo,omega1,omega2,epsFReal,epscoef1,epscoef2,betagrad,vecNL);
+  }
+  
   double fom=beta/pow(ldos1,ldospowerindex);
-  PetscPrintf(PETSC_COMM_WORLD,"----********the current fom at step %.5d is %.16e \n",count,fom);
 
   VecScale(betagrad,1.0/pow(ldos1,ldospowerindex));
   VecWAXPY(tmpgrad,-1.0*ldospowerindex*beta/pow(ldos1,ldospowerindex+1.0),ldos1grad,betagrad);
 
+  if(W){
+    double wdote;
+    Vec wdote_grad;
+    VecDuplicate(tmpgrad,&wdote_grad);
+
+    wdote=funcWdotEabs(ksp2,W,epscoef2,wdote_grad,omega2);
+    double fom_normalized=fom/cpow(wdote,expW);
+    VecScale(tmpgrad,1.0/cpow(wdote,expW));
+    VecAXPY(tmpgrad,-1.0*(expW)*fom/cpow(wdote,expW+1),wdote_grad);
+    fom = fom_normalized;
+
+    VecDestroy(&wdote_grad);
+  }
+
+  PetscPrintf(PETSC_COMM_WORLD,"----********the current fom at step %.5d is %.16e \n",count,fom);
+  
   ierr=VecPointwiseMult(tmpgrad,tmpgrad,epsgrad); CHKERRQ(ierr);
   KSPSolveTranspose(kspH,tmpgrad,fomgrad);
   VecToArray(fomgrad,grad,scatter,from,to,vgradlocal,DegFree);
@@ -178,6 +227,7 @@ double optfomshg(int DegFree, double *epsopt, double *grad, void *data)
 
   MatDestroy(&Mone);
   MatDestroy(&Mtwo);
+  VecDestroy(&x2);
   VecDestroy(&epsgrad);
   VecDestroy(&tmpgrad);
   VecDestroy(&fomgrad);

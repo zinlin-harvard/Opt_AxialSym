@@ -1,11 +1,12 @@
-all: MoperatorCylwithZsym.o SourceGeneration.o MathTools.o MatVecMaker.o Output.o mympisetup.o filters.o ldos.o optfuncs.o shg.o
+all: MoperatorCylwithZsym.o SourceGeneration.o MathTools.o MatVecMaker.o Output.o mympisetup.o filters.o ldos.o optfuncs.o shg.o shgcrosspol.o thg.o fieldfuncs.o lvs1d.o
 
 include ${PETSC_DIR}/conf/variables
 include ${PETSC_DIR}/conf/rules
-CLEANFILES =  MoperatorCylwithZsym.o SourceGeneration.o MathTools.o MatVecMaker.o Output.o mympisetup.o filters.o ldos.o optfuncs.o shg.o
+
+CLEANFILES =  MoperatorCylwithZsym.o SourceGeneration.o MathTools.o MatVecMaker.o Output.o mympisetup.o filters.o ldos.o optfuncs.o shg.o shgcrosspol.o thg.o fieldfuncs.o lvs1d.o
 
 MoperatorCylwithZsym: MoperatorCylwithZsym.o
-	$(CLINKER) -Wall -g  -o $@ MoperatorCylwithZsym.o 
+	$(CLINKER) -Wall -g -o $@ MoperatorCylwithZsym.o 
 SourceGeneration: SourceGeneration.o
 	$(CLINKER) -Wall -g -o $@ SourceGeneration.o  
 MathTools:MathTools.o
@@ -22,5 +23,13 @@ ldos:ldos.o
 	$(CLINKER) -Wall -g -o $@ ldos.o
 shg:shg.o
 	$(CLINKER) -Wall -g -o $@ shg.o
+shgcrosspol:shgcrosspol.o
+	$(CLINKER) -Wall -g -o $@ shgcrosspol.o
+thg:thg.o
+	$(CLINKER) -Wall -g -o $@ thg.o
+fieldfuncs:fieldfuncs.o
+	$(CLINKER) -Wall -g -o $@ fieldfuncs.o
 optfuncs:optfuncs.o
 	$(CLINKER) -Wall -g -o $@ optfuncs.o
+lvs1d:lvs1d.o
+	$(CLINKER) -Wall -g -o $@ lvs1d.o

@@ -70,6 +70,11 @@ int main(int argc, char **argv)
   if(Qabs>1e15) Qabs=1.0/0.0;
   MyCheckAndOutputDouble(flg,Qabs,"Qabs","Qabs");
 
+  int multiplier;
+  PetscOptionsGetInt(PETSC_NULL,"-multiplier",&multiplier,&flg);
+  if(!flg) multiplier=1;
+  PetscPrintf(PETSC_COMM_WORLD,"------multiplier is: %d \n ",multiplier); 
+
   int outputbase;
   PetscOptionsGetInt(PETSC_NULL,"-outputbase",&outputbase,&flg); MyCheckAndOutputInt(flg,outputbase,"outputbase","outputbase");
 
@@ -80,6 +85,16 @@ int main(int argc, char **argv)
   PetscOptionsGetInt(PETSC_NULL,"-ptsrcdir",&ptsrcdir,&flg);  MyCheckAndOutputInt(flg,ptsrcdir,"ptsrcdir","ptsrcdir");
   PetscOptionsGetReal(PETSC_NULL,"-Jmag",&Jmag,&flg);  MyCheckAndOutputDouble(flg,Jmag,"Jmag","Jmag");
 
+  int ptsrc2r, ptsrc2z, ptsrc2dir;
+  PetscOptionsGetInt(PETSC_NULL,"-ptsrc2r",&ptsrc2r,&flg);
+  if(!flg) ptsrc2r=ptsrcr;
+  PetscOptionsGetInt(PETSC_NULL,"-ptsrc2z",&ptsrc2z,&flg); 
+  if(!flg) ptsrc2z=ptsrcz;
+  PetscOptionsGetInt(PETSC_NULL,"-ptsrc2dir",&ptsrc2dir,&flg);
+  if(!flg) ptsrc2dir=ptsrcdir;
+  PetscPrintf(PETSC_COMM_WORLD,"----ptsrc2r, ptsrc2z, and ptsrc2dir: %d, %d, %d \n", ptsrc2r, ptsrc2z, ptsrc2dir);
+
+  
   char initialdatafile[PETSC_MAX_PATH_LEN];
   PetscOptionsGetString(PETSC_NULL,"-filenameprefix",filenameComm,PETSC_MAX_PATH_LEN,&flg); MyCheckAndOutputChar(flg,filenameComm,"filenameComm","Filename prefix");
   PetscOptionsGetString(PETSC_NULL,"-initdatfile",initialdatafile,PETSC_MAX_PATH_LEN,&flg); MyCheckAndOutputChar(flg,initialdatafile,"initialdatafile","Inputdata file");
@@ -117,8 +132,42 @@ int main(int argc, char **argv)
   PetscOptionsGetReal(PETSC_NULL,"-epssub1",&epssub1,&flg); MyCheckAndOutputDouble(flg,epssub1,"epssub1","epssub1"); 
   PetscOptionsGetReal(PETSC_NULL,"-epssub2",&epssub2,&flg); MyCheckAndOutputDouble(flg,epssub2,"epssub2","epssub2"); 
 
+  char epsmed1file[PETSC_MAX_PATH_LEN];
+  char epsmed2file[PETSC_MAX_PATH_LEN];
+  PetscOptionsGetString(PETSC_NULL,"-epsmed1filename",epsmed1file,PETSC_MAX_PATH_LEN,&flg);
+  if(!flg) strcpy(epsmed1file,"");
+  
+  PetscOptionsGetString(PETSC_NULL,"-epsmed2filename",epsmed2file,PETSC_MAX_PATH_LEN,&flg);
+  if(!flg) strcpy(epsmed2file,"");
+  
+  if(strcmp(epsmed1file,"")==0)
+    PetscPrintf(PETSC_COMM_WORLD,"----epsmed1file is  empty. \n");
+  else
+    PetscPrintf(PETSC_COMM_WORLD,"----epsmed1file is %s \n",epsmed1file);
+
+  if(strcmp(epsmed2file,"")==0)
+    PetscPrintf(PETSC_COMM_WORLD,"----epsmed2file is  empty. \n");
+  else
+    PetscPrintf(PETSC_COMM_WORLD,"----epsmed2file is %s \n",epsmed2file);
+  
+  char vecNLfile[PETSC_MAX_PATH_LEN];
+  PetscOptionsGetString(PETSC_NULL,"-vecNLfilename",vecNLfile,PETSC_MAX_PATH_LEN,&flg);
+  if(!flg) strcpy(vecNLfile,"");
+  if(strcmp(vecNLfile,"")==0)
+    PetscPrintf(PETSC_COMM_WORLD,"----vecNLfile is empty. \n");
+  else
+    PetscPrintf(PETSC_COMM_WORLD,"----vecNLfile is %s \n",vecNLfile);
+  
+  double expW;
+  PetscOptionsGetReal(PETSC_NULL,"-expW",&expW,&flg);
+  PetscPrintf(PETSC_COMM_WORLD,"----expW is: %g \n",expW);
+  
   /*------Set up the A, C, D matrices--------------*/
-  myinterp(PETSC_COMM_WORLD,&A,Nr,Nz,Mr,Mz,mr0,mz0,Mzslab); 
+  if(multiplier==1){
+    myinterp(PETSC_COMM_WORLD,&A,Nr,Nz,Mr,Mz,mr0,mz0,Mzslab);
+  }else{
+    myinterpmultiplier(PETSC_COMM_WORLD,&A,Nr,Nz,multiplier,Mr,Mz,mr0,mz0,Mzslab);
+  }
   CongMat(PETSC_COMM_WORLD, &C, 6*Nzr);
   ImagIMat(PETSC_COMM_WORLD, &D,6*Nzr);
 
@@ -173,9 +222,45 @@ int main(int argc, char **argv)
   VecPointwiseMult(epscoef2,epsDiff2,vecQ);
   VecScale(epscoef2,omega2*omega2);
 
-  GetMediumVecwithSub(epsMed1,Nr,Nz,Mr,Mz,epsair,epssub1,Mzslab);  
-  GetMediumVecwithSub(epsMed2,Nr,Nz,Mr,Mz,epsair,epssub2,Mzslab);  
+  int i;
+  if(strcmp(epsmed1file,"")==0 && strcmp(epsmed2file,"")==0){
+    GetMediumVecwithSub(epsMed1,Nr,Nz,Mr,Mz,epsair,epssub1,Mzslab,mr0,mz0);  
+    GetMediumVecwithSub(epsMed2,Nr,Nz,Mr,Mz,epsair,epssub2,Mzslab,mr0,mz0);  
+  }else{
+    double *epsmed1array, *epsmed2array;
+    FILE *med1file, *med2file;
+    epsmed1array = (double *)malloc(6*Nz*Nr*sizeof(double));
+    epsmed2array = (double *)malloc(6*Nz*Nr*sizeof(double));
+    med1file=fopen(epsmed1file,"r");
+    med2file=fopen(epsmed2file,"r");
+    for(i=0;i<6*Nz*Nr;i++){
+      fscanf(med1file,"%lf",&epsmed1array[i]);
+      fscanf(med2file,"%lf",&epsmed2array[i]);
+    }
+    ArrayToVec(epsmed1array,epsMed1);
+    ArrayToVec(epsmed2array,epsMed2);
+    fclose(med1file);
+    fclose(med2file);
+    free(epsmed1array);
+    free(epsmed2array);
+  }
 
+  Vec vecNL;
+  VecDuplicate(vR,&vecNL);
+  if(strcmp(vecNLfile,"")){
+    FILE *filevecNL;
+    double *vecNLarray;
+    vecNLarray = (double *)malloc(6*Nz*Nr*sizeof(double));
+    filevecNL=fopen(vecNLfile,"r");
+    for(i=0;i<6*Nz*Nr;i++){
+      fscanf(filevecNL,"%lf",&vecNLarray[i]);
+    }
+    ArrayToVec(vecNLarray,vecNL);
+    fclose(filevecNL);
+    free(vecNLarray);
+  }
+    
+  
   /*-----Set up epsSReal, epsFReal, vgradlocal ------*/
   Vec epsSReal, epsFReal;
   ierr = MatGetVecs(A,&epsSReal, &epsFReal); CHKERRQ(ierr);
@@ -197,6 +282,7 @@ int main(int argc, char **argv)
     SourceSingleSetZ(PETSC_COMM_WORLD, ptsrc, Nr, 1, Nz, ptsrcr, 0, ptsrcz,1.0/hzr);
   else
     PetscPrintf(PETSC_COMM_WORLD," Please specify correct direction of point source current: x (1) , y (2) or z (3)\n "); 
+
   int Jopt=0;
   PetscOptionsGetInt(PETSC_NULL,"-Jopt",&Jopt,&flg);
   PetscPrintf(PETSC_COMM_WORLD,"----Jopt is: %d \n",Jopt);
@@ -210,17 +296,16 @@ int main(int argc, char **argv)
     int inJi;
     for (inJi=0;inJi<6*Nr*Nz;inJi++)
       {
-        fscanf(Jptf,"%lf",&inJ[inJi]);
+	fscanf(Jptf,"%lf",&inJ[inJi]);
       }
     fclose(Jptf);
 
     ArrayToVec(inJ,ptsrc);
 
-    free(inJ); 
+    free(inJ);
 
   }
-
-
+  
   /*--------Create index sets for the vec scatter -------*/
   ierr =ISCreateStride(PETSC_COMM_SELF,DegFree,0,1,&from); CHKERRQ(ierr);
   ierr =ISCreateStride(PETSC_COMM_SELF,DegFree,0,1,&to); CHKERRQ(ierr);
@@ -251,7 +336,6 @@ int main(int argc, char **argv)
   epsopt = (double *) malloc(DegFree*sizeof(double));
   ptf = fopen(initialdatafile,"r");
   PetscPrintf(PETSC_COMM_WORLD,"reading from input files \n");
-  int i;
   for (i=0;i<DegFree;i++)
     { 
       fscanf(ptf,"%lf",&epsopt[i]);
@@ -260,6 +344,22 @@ int main(int argc, char **argv)
 
   double *grad;
   grad = (double *) malloc(DegFree*sizeof(double));
+
+  //Vector that specifies the position of the point where E filed is to be normalized
+  Vec W;
+  VecDuplicate(vR,&W);
+  if(expW){
+    int Wz, Wr, Wc, Wq, Wpos;
+    PetscOptionsGetInt(PETSC_NULL,"-Wz",&Wz,&flg); MyCheckAndOutputInt(flg,Wz,"Wz","Wz");
+    PetscOptionsGetInt(PETSC_NULL,"-Wr",&Wr,&flg); MyCheckAndOutputInt(flg,Wr,"Wr","Wr");
+    PetscOptionsGetInt(PETSC_NULL,"-Wc",&Wc,&flg); MyCheckAndOutputInt(flg,Wc,"Wc","Wc");
+    PetscOptionsGetInt(PETSC_NULL,"-Wq",&Wq,&flg); MyCheckAndOutputInt(flg,Wq,"Wq","Wq");
+    Wpos = Wq*3*Nr*Nz + Wc*Nr*Nz + Wr*Nz + Wz;
+    VecSet(W,0.0);
+    VecSetValue(W,Wpos,1.0/(hr*hz),INSERT_VALUES);
+    VecAssemblyBegin(W);
+    VecAssemblyEnd(W);
+  }
 
   /**Set up J1, J1conj, b1, x1 and LDOSdata1 common to all jobs**/
   Vec J1, J1conj, b1, x1;
@@ -276,14 +376,36 @@ int main(int argc, char **argv)
   Vec ldos1grad;
   VecDuplicate(epsSReal,&ldos1grad);
 
-  LDOSdataGroup ldos1data={omega1,ksp1,&its1,M1,b1,x1,J1conj,epsSReal,epsFReal,epsDiff1,epsMed1,epscoef1,ldos1grad,outputbase}; 
+  LDOSdataGroup ldos1data={omega1,ksp1,&its1,M1,b1,x1,J1conj,epsSReal,epsFReal,epsDiff1,epsMed1,epscoef1,ldos1grad,outputbase,PETSC_NULL,0}; 
+  if(expW){
+    ldos1data.W=W;
+    ldos1data.expW=expW;
+  }
   /***Set up done***/
 
+  //Printout the initial epsfile
+  int printinitialeps=0;
+  PetscOptionsGetInt(PETSC_NULL,"-printinitialeps",&printinitialeps,&flg);
+  PetscPrintf(PETSC_COMM_WORLD,"----printinitialeps is: %d \n",printinitialeps);
+  if(printinitialeps){
+    Vec epsFinit;
+    Vec epsSinit;
+    VecDuplicate(vR,&epsFinit);
+    VecDuplicate(epsSReal,&epsSinit);
+    ArrayToVec(epsopt,epsSinit);
+    MatMult(A,epsSinit,epsFinit);
+    VecPointwiseMult(epsFinit,epsFinit,epsDiff1);
+    VecAXPY(epsFinit,1.0,epsMed1);
+    OutputVec(PETSC_COMM_WORLD,epsFinit,"epsFinit",".m");
+    VecDestroy(&epsFinit);
+    VecDestroy(&epsSinit);
+  }
+  
   int Job;
   PetscOptionsGetInt(PETSC_NULL,"-Job",&Job,&flg); MyCheckAndOutputInt(flg,Job,"Job","Job");
 
   int optJob;
-  PetscOptionsGetInt(PETSC_NULL,"-optJob",&optJob,&flg); MyCheckAndOutputInt(flg,optJob,"optJob","--------optJob option (1 single LDOS, 2 SHG, 3 THG) ");
+  PetscOptionsGetInt(PETSC_NULL,"-optJob",&optJob,&flg); MyCheckAndOutputInt(flg,optJob,"optJob","--------optJob option (1 single LDOS, 2 NFC) ");
 
 if (Job==1){
   /*---------Optimization--------*/
@@ -322,7 +444,7 @@ if (Job==1){
       ub[i]=valfixedpxl;
     }
   }
-
+  
   opt = nlopt_create(mynloptalg, DegFree);
 
   nlopt_set_lower_bounds(opt,lb);
@@ -357,12 +479,23 @@ werindex");
   if(ptsrcdir==2) VecCopy(unitp,ej);
   if(ptsrcdir==3) VecCopy(unitz,ej);
 
-  SHGdataGroup shgdata={ldospowerindex,omega1,omega2,ksp1,ksp2,&its1,&its2,M1,M2,b1,x1,ej,J1conj,epsSReal,epsFReal,epsDiff1,epsDiff2,epsMed1,epsMed2,epscoef1,epscoef2,ldos1grad,betagrad,outputbase};
-
+  SHGdataGroup shgdata={ldospowerindex,omega1,omega2,ksp1,ksp2,&its1,&its2,M1,M2,b1,x1,ej,J1conj,epsSReal,epsFReal,epsDiff1,epsDiff2,epsMed1,epsMed2,epscoef1,epscoef2,ldos1grad,betagrad,outputbase,PETSC_NULL,PETSC_NULL,0,PETSC_NULL};
+  if(ptsrc2dir!=ptsrcdir){
+    GetDotMat(PETSC_COMM_WORLD,&B,ptsrc2dir-1,ptsrcdir-1,Nr,Nz); 
+    shgdata.B=B;
+  }
+  if(expW){
+    shgdata.W=W;
+    shgdata.expW=expW;
+  }
+  if(strcmp(vecNLfile,"")){
+    shgdata.vecNL=vecNL;
+  }
+  
   if (optJob==1){
     nlopt_set_max_objective(opt,optldos,&ldos1data);
   }else if (optJob==2){
-    nlopt_set_max_objective(opt,optfomshg,&shgdata);
+    nlopt_set_max_objective(opt,optfomnfc,&shgdata);
   }
 
   result = nlopt_optimize(opt,epsopt,&maxf);
@@ -422,12 +555,23 @@ if (Job==2){
     if(ptsrcdir==2) VecCopy(unitp,ej);
     if(ptsrcdir==3) VecCopy(unitz,ej);
 
-    SHGdataGroup shgdata={ldospowerindex,omega1,omega2,ksp1,ksp2,&its1,&its2,M1,M2,b1,x1,ej,J1conj,epsSReal,epsFReal,epsDiff1,epsDiff2,epsMed1,epsMed2,epscoef1,epscoef2,ldos1grad,betagrad,outputbase};
-
+    SHGdataGroup shgdata={ldospowerindex,omega1,omega2,ksp1,ksp2,&its1,&its2,M1,M2,b1,x1,ej,J1conj,epsSReal,epsFReal,epsDiff1,epsDiff2,epsMed1,epsMed2,epscoef1,epscoef2,ldos1grad,betagrad,outputbase,PETSC_NULL,PETSC_NULL,0,PETSC_NULL};
+    if(ptsrc2dir!=ptsrcdir){
+      GetDotMat(PETSC_COMM_WORLD,&B,ptsrc2dir-1,ptsrcdir-1,Nr,Nz); 
+      shgdata.B=B;
+    }  
+    if(expW){
+      shgdata.W=W;
+      shgdata.expW=expW;
+    }
+    if(strcmp(vecNLfile,"")){
+      shgdata.vecNL=vecNL;
+    }
+    
     for (epscen=s1;epscen<s2;epscen+=ds)
       {
 	epsopt[epsoptj]=epscen;
-	beta = optfomshg(DegFree,epsopt,grad,&shgdata);
+	beta = optfomnfc(DegFree,epsopt,grad,&shgdata);
 	PetscPrintf(PETSC_COMM_WORLD,"epscen: %g beta: %g beta-grad: %g \n", epsopt[epsoptj], beta, grad[epsoptj]);
       }
 
@@ -439,6 +583,42 @@ if (Job==2){
 
 }
 
+ if (Job==3){
+   /*---------Level Set Optimization---------*/
+   PetscPrintf(PETSC_COMM_WORLD,"**********You have chosen Level Set optimization. Only 1d version available for now.**********\n");
+   double dt, maxf=0;
+   int maxeval,steplength;
+   PetscOptionsGetInt(PETSC_NULL,"-maxeval",&maxeval,&flg);  MyCheckAndOutputInt(flg,maxeval,"maxeval","max number of evaluation");
+   PetscOptionsGetInt(PETSC_NULL,"-steplength",&steplength,&flg);  MyCheckAndOutputInt(flg,steplength,"steplength","step length of lsf evolution");
+   PetscOptionsGetReal(PETSC_NULL,"-dt",&dt,&flg);  MyCheckAndOutputDouble(flg,dt,"dt","time step for lvs evolution");
+   
+   if (optJob==1){
+     maxf=lvs1d_opt(optldos,DegFree,epsopt,grad,&ldos1data,maxeval,dt,steplength);
+   }else if (optJob==2){
+     double ldospowerindex;
+     PetscOptionsGetReal(PETSC_NULL,"-ldospowerindex",&ldospowerindex,&flg);  MyCheckAndOutputDouble(flg,ldospowerindex,"ldospowerindex","ldospowerindex");
+
+     Vec ej,betagrad;
+     VecDuplicate(vR,&ej);
+     VecDuplicate(epsSReal,&betagrad);
+     if(ptsrcdir==1) VecCopy(unitr,ej);
+     if(ptsrcdir==2) VecCopy(unitp,ej);
+     if(ptsrcdir==3) VecCopy(unitz,ej);
+
+     SHGdataGroup shgdata={ldospowerindex,omega1,omega2,ksp1,ksp2,&its1,&its2,M1,M2,b1,x1,ej,J1conj,epsSReal,epsFReal,epsDiff1,epsDiff2,epsMed1,epsMed2,epscoef1,epscoef2,ldos1grad,betagrad,outputbase};
+     maxf=lvs1d_opt(optfomnfc,DegFree,epsopt,grad,&shgdata,maxeval,dt,steplength);
+
+     VecDestroy(&ej);
+     VecDestroy(&betagrad);
+   }
+   else if (optJob==3){
+     maxf=lvs1d_opt(test,DegFree,epsopt,grad,NULL,maxeval,dt,steplength);
+   }
+   
+   PetscPrintf(PETSC_COMM_WORLD,"*********optimized objective value is %g .\n",maxf);
+   
+}
+ 
 /*------------------------------------------------*/
 /*------------------------------------------------*/
 /*------------------------------------------------*/
@@ -449,6 +629,7 @@ if (Job==2){
 
 /* ----------------------Destroy Vecs and Mats----------------------------*/ 
   ierr = MatDestroy(&A); CHKERRQ(ierr);
+  ierr = MatDestroy(&B); CHKERRQ(ierr);
   ierr = MatDestroy(&C); CHKERRQ(ierr);
   ierr = MatDestroy(&D); CHKERRQ(ierr);
   ierr = MatDestroy(&M1); CHKERRQ(ierr);  
@@ -480,6 +661,10 @@ if (Job==2){
   ierr = VecDestroy(&J1conj); CHKERRQ(ierr);
   ierr = VecDestroy(&ldos1grad); CHKERRQ(ierr);
 
+  ierr = VecDestroy(&W); CHKERRQ(ierr);
+
+  ierr = VecDestroy(&vecNL); CHKERRQ(ierr);
+  
   ierr = KSPDestroy(&ksp1);CHKERRQ(ierr);
   ierr = KSPDestroy(&ksp2);CHKERRQ(ierr);
   ierr = KSPDestroy(&kspH);CHKERRQ(ierr);

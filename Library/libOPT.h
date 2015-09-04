@@ -19,6 +19,8 @@ typedef struct{
   Vec epscoef;
   Vec ldosgrad;
   int outputbase;
+  Vec W;
+  double expW;
 } LDOSdataGroup;
 
 typedef struct{
@@ -46,6 +48,10 @@ typedef struct{
   Vec ldos1grad;
   Vec betagrad;
   int outputbase;
+  Mat B;
+  Vec W;
+  double expW;
+  Vec vecNL;
 } SHGdataGroup;
 
 typedef struct
@@ -92,12 +98,15 @@ PetscErrorCode GetDotMat(MPI_Comm comm, Mat *Bout, int c1, int c2, int Nr, int N
 PetscErrorCode ImagIMat(MPI_Comm comm, Mat *Dout, int N);
 PetscErrorCode CongMat(MPI_Comm comm, Mat *Cout, int N);
 PetscErrorCode GetMediumVec(Vec epsmedium,int Nz, int Mz, double epsair, double epssub);
-PetscErrorCode GetMediumVecwithSub(Vec epsmedium, int Nr, int Nz, int Mr, int Mz, double epsair, double epssub, int Mzslab);
+PetscErrorCode GetMediumVecwithSub(Vec epsmedium, int Nr, int Nz, int Mr, int Mz, double epsair, double epssub, int Mzslab, int mr0, int mz0);
 PetscErrorCode GetRealPartVec(Vec vR, int N);
 PetscErrorCode AddMuAbsorption(double *muinv, Vec muinvpml, double Qabs, int add);
 PetscErrorCode GetUnitVec(Vec ej, int pol, int N);
 PetscErrorCode GetRadiusVec(Vec vecRad, int Nr, int Nz, double hr, int m);
 PetscErrorCode myinterp(MPI_Comm comm, Mat *Aout, int Nr, int Nz, int Mr, int Mz, int mr, int mz, int Mzslab);
+PetscErrorCode expandMat(MPI_Comm comm, Mat *Aout, int DegFree, int multiplier);
+PetscErrorCode myinterpmultiplier(MPI_Comm comm, Mat *Aout, int Nr, int Nz, int multiplier, int Mr, int Mz, int mr, int mz, int Mzslab);
+
 
 // from Output.c
 PetscErrorCode OutputVec(MPI_Comm comm, Vec x, const char *filenameComm, const char *filenameProperty);
@@ -110,9 +119,6 @@ PetscErrorCode GetIntParaCmdLine(int *ptCmdVar, const char *strCmdVar, const cha
 
 // from mympisetup.c
 int mympisetup();
-
-// from eigsolver.c
-int eigsolver(Mat M, Vec epsC, Mat D);
 
 // form filters.c
 void vecdvpow(double *u, double *v, double *dv, int n, int p);
@@ -131,8 +137,28 @@ PetscErrorCode MuinvPMLFull(MPI_Comm comm, Vec *muinvout, int Nx, int Ny, int Nz
 double computeldos(KSP ksp, Mat Mopr, double omega, Vec epsFReal, Vec b, Vec Jconj, Vec x, Vec epscoef, Vec ldosgrad, int *its);
 
 // from shg.c
-double computebeta2(Vec x1, Vec ej, int *its, KSP ksp1, KSP ksp2, Mat Mone, Mat Mtwo, double omega1, double omega2, Vec epsFReal, Vec epscoef1, Vec epscoef2, Vec betagrad);
+double computebeta2(Vec x1, Vec x2, Vec ej, int *its, KSP ksp1, KSP ksp2, Mat Mone, Mat Mtwo, double omega1, double omega2, Vec epsFReal, Vec epscoef1, Vec epscoef2, Vec betagrad, Vec vecNL);
+
+// from shgcrosspol.c
+double computebeta2crosspol(Vec x1, Vec x2, Mat B, int *its, KSP ksp1, KSP ksp2, Mat Mone, Mat Mtwo, double omega1, double omega2, Vec epsFReal, Vec epscoef1, Vec epscoef2, Vec betagrad, Vec vecNL);
+
+// from thg.c
+double computebetathg(Vec x1, Vec x2, Vec ej, int *its, KSP ksp1, KSP ksp2, Mat Mone, Mat Mtwo, double omega1, double omega2, Vec epsFReal, Vec epscoef1, Vec epscoef2, Vec betagrad, Vec vecNL);
+
+// from fieldfuncs.c
+double funcWdotEabs(KSP ksp, Vec W, Vec epscoef, Vec grad, double omega);
 
 // from optfuncs.c
 double optldos(int DegFree, double *epsopt, double *grad, void *data);
-double optfomshg(int DegFree, double *epsopt, double *grad, void *data);
+double optfomnfc(int DegFree, double *epsopt, double *grad, void *data);
+
+// from lvs1d.c
+void struc2lsf_1d(int *struc, double *lsf, int n);
+void lsf2struc_1d(double *lsf, int *struc, int n);
+void edtrans1d(int *struc, double *dist, int n);
+double lvs1d_opt(double (*optfunc)(int,double*,double*,void*), int DegFree, double *epsopt, double *grad, void *data, int maxeval, double dt, int steplength);
+void update_struc1d(int *struc, double *v, int n, double dt, int steplength);
+double find_maxabs(double *v, int n);
+double min(double a, double b);
+double max(double a, double b);
+double test(int DegFree, double *epsopt, double *grad, void *data);
