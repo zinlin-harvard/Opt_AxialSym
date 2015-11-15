@@ -62,7 +62,9 @@ int main(int argc, char **argv)
   Mzr=Mr*Mz, Nzr=Nr*Nz;
   DegFree = (Mzslab==0)*Mr*Mz + (Mzslab==1)*Mr + (Mzslab==2)*Mz;
   PetscOptionsGetReal(PETSC_NULL,"-hr",&hr,&flg);  MyCheckAndOutputDouble(flg,hr,"hr","hr");
-  hz=hr;
+  PetscOptionsGetReal(PETSC_NULL,"-hz",&hz,&flg);
+  if(!flg) hz=hr;
+  PetscPrintf(PETSC_COMM_WORLD,"------hz is %g \n",hz);
   hzr = hr*hz;
 
   int multiplier;
