@@ -1,9 +1,10 @@
-all: MoperatorCylwithZsym.o SourceGeneration.o MathTools.o MatVecMaker.o Output.o mympisetup.o filters.o ldos.o optfuncs.o shg.o shgcrosspol.o thg.o fieldfuncs.o lvs1d.o
+all: MoperatorCylwithZsym.o SourceGeneration.o MathTools.o MatVecMaker.o Output.o mympisetup.o filters.o ldos.o optfuncs.o shg.o shgcrosspol.o thg.o fieldfuncs.o eigsolver.o lvs1d.o
 
 include ${PETSC_DIR}/conf/variables
 include ${PETSC_DIR}/conf/rules
+include ${SLEPC_DIR}/conf/slepc_common
 
-CLEANFILES =  MoperatorCylwithZsym.o SourceGeneration.o MathTools.o MatVecMaker.o Output.o mympisetup.o filters.o ldos.o optfuncs.o shg.o shgcrosspol.o thg.o fieldfuncs.o lvs1d.o
+CLEANFILES =  MoperatorCylwithZsym.o SourceGeneration.o MathTools.o MatVecMaker.o Output.o mympisetup.o filters.o ldos.o optfuncs.o shg.o shgcrosspol.o thg.o fieldfuncs.o eigsolver.o lvs1d.o
 
 MoperatorCylwithZsym: MoperatorCylwithZsym.o
 	$(CLINKER) -Wall -g -o $@ MoperatorCylwithZsym.o 
@@ -31,5 +32,7 @@ fieldfuncs:fieldfuncs.o
 	$(CLINKER) -Wall -g -o $@ fieldfuncs.o
 optfuncs:optfuncs.o
 	$(CLINKER) -Wall -g -o $@ optfuncs.o
+eigsolver:eigsolver.o
+	$(CLINKER) -Wall -g -o $@ eigsolver.o
 lvs1d:lvs1d.o
 	$(CLINKER) -Wall -g -o $@ lvs1d.o

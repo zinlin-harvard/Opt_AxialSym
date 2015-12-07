@@ -1,0 +1,7 @@
+cd ../Library/
+bash makelib
+cd ../eigen/
+ln -s ../Library/libOPT.h ./
+
+make
+make clean

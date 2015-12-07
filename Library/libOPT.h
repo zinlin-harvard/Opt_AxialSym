@@ -120,6 +120,9 @@ PetscErrorCode GetIntParaCmdLine(int *ptCmdVar, const char *strCmdVar, const cha
 // from mympisetup.c
 int mympisetup();
 
+// from eigsolver.c
+int eigsolver(Mat M, Vec epsC, Mat D);
+
 // form filters.c
 void vecdvpow(double *u, double *v, double *dv, int n, int p);
 void vectanhproj(double *u, double *v, double *dv, int n, double b, double eta);
