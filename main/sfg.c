@@ -78,13 +78,14 @@ int main(int argc, char **argv)
   int outputbase;
   PetscOptionsGetInt(PETSC_NULL,"-outputbase",&outputbase,&flg); MyCheckAndOutputInt(flg,outputbase,"outputbase","outputbase");
 
-  int ptsrcr, ptsrcz, ptsrcdir;
   double Jmag;
+  PetscOptionsGetReal(PETSC_NULL,"-Jmag",&Jmag,&flg);  MyCheckAndOutputDouble(flg,Jmag,"Jmag","Jmag");
+
+  int ptsrcr, ptsrcz, ptsrcdir;
   PetscOptionsGetInt(PETSC_NULL,"-ptsrcr",&ptsrcr,&flg);  MyCheckAndOutputInt(flg,ptsrcr,"ptsrcr","ptsrcr");
   PetscOptionsGetInt(PETSC_NULL,"-ptsrcz",&ptsrcz,&flg);  MyCheckAndOutputInt(flg,ptsrcz,"ptsrcz","ptsrcz");
   PetscOptionsGetInt(PETSC_NULL,"-ptsrcdir",&ptsrcdir,&flg);  MyCheckAndOutputInt(flg,ptsrcdir,"ptsrcdir","ptsrcdir");
-  PetscOptionsGetReal(PETSC_NULL,"-Jmag",&Jmag,&flg);  MyCheckAndOutputDouble(flg,Jmag,"Jmag","Jmag");
-
+  
   int ptsrc2r, ptsrc2z, ptsrc2dir;
   PetscOptionsGetInt(PETSC_NULL,"-ptsrc2r",&ptsrc2r,&flg);
   if(!flg) ptsrc2r=ptsrcr;
@@ -115,36 +116,48 @@ int main(int argc, char **argv)
   PetscOptionsGetReal(PETSC_NULL,"-nR",&nR,&flg); MyCheckAndOutputDouble(flg,nR,"nR","nR");
   PetscOptionsGetInt(PETSC_NULL,"-dimH",&dimH,&flg); MyCheckAndOutputDouble(flg,dimH,"dimH","dimH");
 
-  int m1,m2;
-  PetscOptionsGetInt(PETSC_NULL,"-m1",&m1,&flg);  MyCheckAndOutputInt(flg,m1,"m1","m1");
+  int m1a, m1b,m2;
+  PetscOptionsGetInt(PETSC_NULL,"-m1a",&m1a,&flg);  MyCheckAndOutputInt(flg,m1a,"m1a","m1a");
+  PetscOptionsGetInt(PETSC_NULL,"-m1b",&m1b,&flg);  MyCheckAndOutputInt(flg,m1b,"m1b","m1b");
   PetscOptionsGetInt(PETSC_NULL,"-m2",&m2,&flg);  MyCheckAndOutputInt(flg,m2,"m2","m2");
 
-  double freq1, freq2;
-  PetscOptionsGetReal(PETSC_NULL,"-freq1",&freq1,&flg); MyCheckAndOutputDouble(flg,freq1,"freq1","freq1");
+  double freq1a, freq1b, freq2;
+  PetscOptionsGetReal(PETSC_NULL,"-freq1a",&freq1a,&flg); MyCheckAndOutputDouble(flg,freq1a,"freq1a","freq1a");
+  PetscOptionsGetReal(PETSC_NULL,"-freq1b",&freq1b,&flg); MyCheckAndOutputDouble(flg,freq1b,"freq1b","freq1b");
   PetscOptionsGetReal(PETSC_NULL,"-freq2",&freq2,&flg); MyCheckAndOutputDouble(flg,freq2,"freq2","freq2");
-  double omega1, omega2;
-  omega1=2.0*PI*freq1, omega2=2.0*PI*freq2;
+  double omega1a, omega1b, omega2;
+  omega1a=2.0*PI*freq1a;
+  omega1b=2.0*PI*freq1b;
+  omega2=2.0*PI*freq2;
 
-  double epsilon1, epsilon2, epsair, epssub1, epssub2;
-  PetscOptionsGetReal(PETSC_NULL,"-eps1",&epsilon1,&flg); MyCheckAndOutputDouble(flg,epsilon1,"epsilon1","epsilon1");
+  double epsilon1a, epsilon1b, epsilon2, epsair, epssub1a, epssub1b, epssub2;
+  PetscOptionsGetReal(PETSC_NULL,"-eps1a",&epsilon1a,&flg); MyCheckAndOutputDouble(flg,epsilon1a,"epsilon1a","epsilon1a");
+  PetscOptionsGetReal(PETSC_NULL,"-eps1b",&epsilon1b,&flg); MyCheckAndOutputDouble(flg,epsilon1b,"epsilon1b","epsilon1b");
   PetscOptionsGetReal(PETSC_NULL,"-eps2",&epsilon2,&flg); MyCheckAndOutputDouble(flg,epsilon2,"epsilon2","epsilon2"); 
   PetscOptionsGetReal(PETSC_NULL,"-epsair",&epsair,&flg); MyCheckAndOutputDouble(flg,epsair,"epsair","epsair");
-  PetscOptionsGetReal(PETSC_NULL,"-epssub1",&epssub1,&flg); MyCheckAndOutputDouble(flg,epssub1,"epssub1","epssub1"); 
+  PetscOptionsGetReal(PETSC_NULL,"-epssub1a",&epssub1a,&flg); MyCheckAndOutputDouble(flg,epssub1a,"epssub1a","epssub1a"); 
+  PetscOptionsGetReal(PETSC_NULL,"-epssub1b",&epssub1b,&flg); MyCheckAndOutputDouble(flg,epssub1b,"epssub1b","epssub1b"); 
   PetscOptionsGetReal(PETSC_NULL,"-epssub2",&epssub2,&flg); MyCheckAndOutputDouble(flg,epssub2,"epssub2","epssub2"); 
 
-  char epsmed1file[PETSC_MAX_PATH_LEN];
-  char epsmed2file[PETSC_MAX_PATH_LEN];
-  PetscOptionsGetString(PETSC_NULL,"-epsmed1filename",epsmed1file,PETSC_MAX_PATH_LEN,&flg);
-  if(!flg) strcpy(epsmed1file,"");
-  
+  char epsmed1afile[PETSC_MAX_PATH_LEN];
+  PetscOptionsGetString(PETSC_NULL,"-epsmed1afilename",epsmed1afile,PETSC_MAX_PATH_LEN,&flg);
+  if(!flg) strcpy(epsmed1afile,"");
+  if(strcmp(epsmed1afile,"")==0)
+    PetscPrintf(PETSC_COMM_WORLD,"----epsmed1afile is  empty. \n");
+  else
+    PetscPrintf(PETSC_COMM_WORLD,"----epsmed1afile is %s \n",epsmed1afile);
+
+  char epsmed1bfile[PETSC_MAX_PATH_LEN];
+  PetscOptionsGetString(PETSC_NULL,"-epsmed1bfilename",epsmed1bfile,PETSC_MAX_PATH_LEN,&flg);
+  if(!flg) strcpy(epsmed1bfile,"");
+  if(strcmp(epsmed1bfile,"")==0)
+    PetscPrintf(PETSC_COMM_WORLD,"----epsmed1bfile is  empty. \n");
+  else
+    PetscPrintf(PETSC_COMM_WORLD,"----epsmed1bfile is %s \n",epsmed1bfile);
+
+  char epsmed2file[PETSC_MAX_PATH_LEN];  
   PetscOptionsGetString(PETSC_NULL,"-epsmed2filename",epsmed2file,PETSC_MAX_PATH_LEN,&flg);
   if(!flg) strcpy(epsmed2file,"");
-  
-  if(strcmp(epsmed1file,"")==0)
-    PetscPrintf(PETSC_COMM_WORLD,"----epsmed1file is  empty. \n");
-  else
-    PetscPrintf(PETSC_COMM_WORLD,"----epsmed1file is %s \n",epsmed1file);
-
   if(strcmp(epsmed2file,"")==0)
     PetscPrintf(PETSC_COMM_WORLD,"----epsmed2file is  empty. \n");
   else
@@ -157,10 +170,6 @@ int main(int argc, char **argv)
     PetscPrintf(PETSC_COMM_WORLD,"----vecNLfile is empty. \n");
   else
     PetscPrintf(PETSC_COMM_WORLD,"----vecNLfile is %s \n",vecNLfile);
-  
-  double expW;
-  PetscOptionsGetReal(PETSC_NULL,"-expW",&expW,&flg);
-  PetscPrintf(PETSC_COMM_WORLD,"----expW is: %g \n",expW);
   
   /*------Set up the A, C, D matrices--------------*/
   if(multiplier==1){
@@ -181,7 +190,7 @@ int main(int argc, char **argv)
   ierr = VecDuplicate(vR,&unitp); CHKERRQ(ierr);
   ierr = VecDuplicate(vR,&unitz); CHKERRQ(ierr);
   GetWeightVec(weight,Nr,Nz,zbl);
-  GetRadiusVec(vecRad,Nr,Nz,hr,m1);
+  GetRadiusVec(vecRad,Nr,Nz,hr,m1a);
   GetUnitVec(unitr,0,6*Nzr);
   GetUnitVec(unitp,1,6*Nzr);
   GetUnitVec(unitz,2,6*Nzr);
@@ -191,57 +200,66 @@ int main(int argc, char **argv)
   VecScale(vecQ,1.0/Qabs);
   VecAXPY(vecQ,1.0,vR);
   
-  /*DEBUG*/
-  //PetscObjectSetName((PetscObject) vecRad, "radvec");
-  //OutputVec(PETSC_COMM_WORLD,vecRad,"Rad",".m");
-
-  /*----Set up the universal parts of M1 and M2-------*/
-  Mat M1, M2;
-  MoperatorCyl(PETSC_COMM_WORLD,&M1,m1,omega1);
+  /*----Set up the universal parts of M1a, M1b and M2-------*/
+  Mat M1a, M1b, M2;
+  MoperatorCyl(PETSC_COMM_WORLD,&M1a,m1a,omega1a);
+  MoperatorCyl(PETSC_COMM_WORLD,&M1b,m1b,omega1b);
   MoperatorCyl(PETSC_COMM_WORLD,&M2,m2,omega2);
-  ierr = PetscObjectSetName((PetscObject) M1, "M1"); CHKERRQ(ierr);
+  ierr = PetscObjectSetName((PetscObject) M1a, "M1a"); CHKERRQ(ierr);
+  ierr = PetscObjectSetName((PetscObject) M1b, "M1b"); CHKERRQ(ierr);
   ierr = PetscObjectSetName((PetscObject) M2, "M2"); CHKERRQ(ierr);
-  /*DEBUG*/
-  //OutputMat(PETSC_COMM_WORLD,M1,"M1",".m");
 
   /*----Set up the vecQ, epsDiff's, epscoef's and epsmedium vectors--------*/
-  Vec epsDiff1, epsDiff2, epsMed1, epsMed2;
-  Vec epscoef1, epscoef2;
-  ierr = VecDuplicate(vR,&epsDiff1);CHKERRQ(ierr);
+  Vec epsDiff1a, epsDiff1b, epsDiff2, epsMed1a, epsMed1b, epsMed2;
+  Vec epscoef1a, epscoef1b, epscoef2;
+  ierr = VecDuplicate(vR,&epsDiff1a);CHKERRQ(ierr);
+  ierr = VecDuplicate(vR,&epsDiff1b);CHKERRQ(ierr);
   ierr = VecDuplicate(vR,&epsDiff2);CHKERRQ(ierr);
-  ierr = VecDuplicate(vR,&epscoef1);CHKERRQ(ierr);
+  ierr = VecDuplicate(vR,&epscoef1a);CHKERRQ(ierr);
+  ierr = VecDuplicate(vR,&epscoef1b);CHKERRQ(ierr);
   ierr = VecDuplicate(vR,&epscoef2);CHKERRQ(ierr);
-  ierr = VecDuplicate(vR,&epsMed1);CHKERRQ(ierr);
+  ierr = VecDuplicate(vR,&epsMed1a);CHKERRQ(ierr);
+  ierr = VecDuplicate(vR,&epsMed1b);CHKERRQ(ierr);
   ierr = VecDuplicate(vR,&epsMed2);CHKERRQ(ierr);
 
-  VecSet(epsDiff1,epsilon1);
+  VecSet(epsDiff1a,epsilon1a);
+  VecSet(epsDiff1b,epsilon1b);
   VecSet(epsDiff2,epsilon2);
 
-  VecPointwiseMult(epscoef1,epsDiff1,vecQ);
-  VecScale(epscoef1,omega1*omega1);
+  VecPointwiseMult(epscoef1a,epsDiff1a,vecQ);
+  VecPointwiseMult(epscoef1b,epsDiff1b,vecQ);
+  VecScale(epscoef1a,omega1a*omega1a);
+  VecScale(epscoef1b,omega1b*omega1b);
   VecPointwiseMult(epscoef2,epsDiff2,vecQ);
   VecScale(epscoef2,omega2*omega2);
 
   int i;
-  if(strcmp(epsmed1file,"")==0 && strcmp(epsmed2file,"")==0){
-    GetMediumVecwithSub(epsMed1,Nr,Nz,Mr,Mz,epsair,epssub1,Mzslab,mr0,mz0);  
+  if(strcmp(epsmed1afile,"")==0 && strcmp(epsmed1bfile,"")==0  && strcmp(epsmed2file,"")==0){
+    GetMediumVecwithSub(epsMed1a,Nr,Nz,Mr,Mz,epsair,epssub1a,Mzslab,mr0,mz0);  
+    GetMediumVecwithSub(epsMed1b,Nr,Nz,Mr,Mz,epsair,epssub1b,Mzslab,mr0,mz0);  
     GetMediumVecwithSub(epsMed2,Nr,Nz,Mr,Mz,epsair,epssub2,Mzslab,mr0,mz0);  
   }else{
-    double *epsmed1array, *epsmed2array;
-    FILE *med1file, *med2file;
-    epsmed1array = (double *)malloc(6*Nz*Nr*sizeof(double));
+    double *epsmed1Aarray, *epsmed1Barray, *epsmed2array;
+    FILE *med1afile, *med1bfile, *med2file;
+    epsmed1Aarray = (double *)malloc(6*Nz*Nr*sizeof(double));
+    epsmed1Barray = (double *)malloc(6*Nz*Nr*sizeof(double));
     epsmed2array = (double *)malloc(6*Nz*Nr*sizeof(double));
-    med1file=fopen(epsmed1file,"r");
+    med1afile=fopen(epsmed1afile,"r");
+    med1bfile=fopen(epsmed1bfile,"r");
     med2file=fopen(epsmed2file,"r");
     for(i=0;i<6*Nz*Nr;i++){
-      fscanf(med1file,"%lf",&epsmed1array[i]);
+      fscanf(med1afile,"%lf",&epsmed1Aarray[i]);
+      fscanf(med1bfile,"%lf",&epsmed1Barray[i]);
       fscanf(med2file,"%lf",&epsmed2array[i]);
     }
-    ArrayToVec(epsmed1array,epsMed1);
+    ArrayToVec(epsmed1Aarray,epsMed1a);
+    ArrayToVec(epsmed1Barray,epsMed1b);
     ArrayToVec(epsmed2array,epsMed2);
-    fclose(med1file);
+    fclose(med1afile);
+    fclose(med1bfile);
     fclose(med2file);
-    free(epsmed1array);
+    free(epsmed1Aarray);
+    free(epsmed1Barray);
     free(epsmed2array);
   }
 
@@ -312,20 +330,19 @@ int main(int argc, char **argv)
 
   /*--------Setup the KSP variables ---------------*/
   ierr = PetscPrintf(PETSC_COMM_WORLD,"--------Setting up the KSP variables.--------\n ");CHKERRQ(ierr);
-  KSP ksp1, ksp2;
-  PC pc1, pc2; 
-  int its1=100, its2=100;
+  KSP ksp1a, ksp1b, ksp2;
+  PC pc1a, pc1b, pc2; 
+  int its1a=100, its1b=100, its2=100;
   int iteronly=0;
-  setupKSP(PETSC_COMM_WORLD,&ksp1,&pc1,solver,iteronly,maxit);
+  setupKSP(PETSC_COMM_WORLD,&ksp1a,&pc1a,solver,iteronly,maxit);
+  setupKSP(PETSC_COMM_WORLD,&ksp1b,&pc1b,solver,iteronly,maxit);
   setupKSP(PETSC_COMM_WORLD,&ksp2,&pc2,solver,iteronly,maxit);
 
   /*--------Setup Helmholtz filter---------*/
   PC pcH;
   GetH(PETSC_COMM_WORLD,&Hfilt,DegFree,1,1,sH,nR,dimH,&kspH,&pcH);
   PetscObjectSetName((PetscObject) Hfilt, "H");
-  //OutputMat(PETSC_COMM_WORLD, Hfilt, "Hfilter",".m");
   ierr = PetscPrintf(PETSC_COMM_WORLD,"--------Setting up the Hfilt DONE!--------\n ");CHKERRQ(ierr);
-  /*--------Setup Helmholtz filter DONE---------*/
 
   /*---------Setup Done!---------*/
   ierr = PetscPrintf(PETSC_COMM_WORLD,"--------Everything set up! Ready to calculate the overlap and gradient.--------\n ");CHKERRQ(ierr);
@@ -345,67 +362,44 @@ int main(int argc, char **argv)
   double *grad;
   grad = (double *) malloc(DegFree*sizeof(double));
 
-  //Vector that specifies the position of the point where E filed is to be normalized
-  Vec W;
-  VecDuplicate(vR,&W);
-  if(expW){
-    int Wz, Wr, Wc, Wq, Wpos;
-    PetscOptionsGetInt(PETSC_NULL,"-Wz",&Wz,&flg); MyCheckAndOutputInt(flg,Wz,"Wz","Wz");
-    PetscOptionsGetInt(PETSC_NULL,"-Wr",&Wr,&flg); MyCheckAndOutputInt(flg,Wr,"Wr","Wr");
-    PetscOptionsGetInt(PETSC_NULL,"-Wc",&Wc,&flg); MyCheckAndOutputInt(flg,Wc,"Wc","Wc");
-    PetscOptionsGetInt(PETSC_NULL,"-Wq",&Wq,&flg); MyCheckAndOutputInt(flg,Wq,"Wq","Wq");
-    Wpos = Wq*3*Nr*Nz + Wc*Nr*Nz + Wr*Nz + Wz;
-    VecSet(W,0.0);
-    VecSetValue(W,Wpos,1.0/(hr*hz),INSERT_VALUES);
-    VecAssemblyBegin(W);
-    VecAssemblyEnd(W);
-  }
+  /**Set up J1a, J1aconj, b1a, x1a and LDOSdata1a common to all jobs**/
+  Vec J1a, J1aconj, b1a, x1a;
+  VecDuplicate(vR,&J1aconj);
+  VecDuplicate(vR,&b1a);
+  VecDuplicate(vR,&x1a);
+  VecDuplicate(vR,&J1a);
 
-  /**Set up J1, J1conj, b1, x1 and LDOSdata1 common to all jobs**/
-  Vec J1, J1conj, b1, x1;
-  VecDuplicate(vR,&J1conj);
-  VecDuplicate(vR,&b1);
-  VecDuplicate(vR,&x1);
-  VecDuplicate(vR,&J1);
-
-  VecCopy(ptsrc,J1);
-  MatMult(C,J1,J1conj);
+  VecCopy(ptsrc,J1a);
+  MatMult(C,J1a,J1aconj);
   
-  MatMult(D,J1,b1);
-  VecScale(b1,omega1);
-  Vec ldos1grad;
-  VecDuplicate(epsSReal,&ldos1grad);
+  MatMult(D,J1a,b1a);
+  VecScale(b1a,omega1a);
+  Vec ldos1agrad;
+  VecDuplicate(epsSReal,&ldos1agrad);
 
-  LDOSdataGroup ldos1data={omega1,ksp1,&its1,M1,b1,x1,J1conj,epsSReal,epsFReal,epsDiff1,epsMed1,epscoef1,ldos1grad,outputbase,PETSC_NULL,0}; 
-  if(expW){
-    ldos1data.W=W;
-    ldos1data.expW=expW;
-  }
+  //LDOSdataGroup ldos1adata={omega1a,ksp1a,&its1a,M1a,b1a,x1a,J1aconj,epsSReal,epsFReal,epsDiff1a,epsMed1a,epscoef1a,ldos1agrad,outputbase,PETSC_NULL,0}; 
+
+  /**Set up J1b, J1bconj, b1b, x1b and LDOSdata1b common to all jobs**/
+  Vec J1b, J1bconj, b1b, x1b;
+  VecDuplicate(vR,&J1bconj);
+  VecDuplicate(vR,&b1b);
+  VecDuplicate(vR,&x1b);
+  VecDuplicate(vR,&J1b);
+
+  VecCopy(ptsrc,J1b);
+  MatMult(C,J1b,J1bconj);
+  
+  MatMult(D,J1b,b1b);
+  VecScale(b1b,omega1b);
+  Vec ldos1bgrad;
+  VecDuplicate(epsSReal,&ldos1bgrad);
+
+  //LDOSdataGroup ldos1bdata={omega1b,ksp1b,&its1b,M1b,b1b,x1b,J1bconj,epsSReal,epsFReal,epsDiff1b,epsMed1b,epscoef1b,ldos1bgrad,outputbase,PETSC_NULL,0}; 
+
   /***Set up done***/
 
-  //Printout the initial epsfile
-  int printinitialeps=0;
-  PetscOptionsGetInt(PETSC_NULL,"-printinitialeps",&printinitialeps,&flg);
-  PetscPrintf(PETSC_COMM_WORLD,"----printinitialeps is: %d \n",printinitialeps);
-  if(printinitialeps){
-    Vec epsFinit;
-    Vec epsSinit;
-    VecDuplicate(vR,&epsFinit);
-    VecDuplicate(epsSReal,&epsSinit);
-    ArrayToVec(epsopt,epsSinit);
-    MatMult(A,epsSinit,epsFinit);
-    VecPointwiseMult(epsFinit,epsFinit,epsDiff1);
-    VecAXPY(epsFinit,1.0,epsMed1);
-    OutputVec(PETSC_COMM_WORLD,epsFinit,"epsFinit",".m");
-    VecDestroy(&epsFinit);
-    VecDestroy(&epsSinit);
-  }
-  
   int Job;
   PetscOptionsGetInt(PETSC_NULL,"-Job",&Job,&flg); MyCheckAndOutputInt(flg,Job,"Job","Job");
-
-  int optJob;
-  PetscOptionsGetInt(PETSC_NULL,"-optJob",&optJob,&flg); MyCheckAndOutputInt(flg,optJob,"optJob","--------optJob option (1 single LDOS, 2 NFC) ");
 
 if (Job==1){
   /*---------Optimization--------*/
@@ -469,8 +463,7 @@ if (Job==1){
   }
 
   double ldospowerindex;
-  PetscOptionsGetReal(PETSC_NULL,"-ldospowerindex",&ldospowerindex,&flg);  MyCheckAndOutputDouble(flg,ldospowerindex,"ldospowerindex","ldospo\
-werindex");
+  PetscOptionsGetReal(PETSC_NULL,"-ldospowerindex",&ldospowerindex,&flg);  MyCheckAndOutputDouble(flg,ldospowerindex,"ldospowerindex","ldospowerindex");
 
   Vec ej,betagrad;
   VecDuplicate(vR,&ej);
@@ -479,25 +472,13 @@ werindex");
   if(ptsrcdir==2) VecCopy(unitp,ej);
   if(ptsrcdir==3) VecCopy(unitz,ej);
 
-  SHGdataGroup shgdata={ldospowerindex,omega1,omega2,ksp1,ksp2,&its1,&its2,M1,M2,b1,x1,ej,J1conj,epsSReal,epsFReal,epsDiff1,epsDiff2,epsMed1,epsMed2,epscoef1,epscoef2,ldos1grad,betagrad,outputbase,PETSC_NULL,PETSC_NULL,0,PETSC_NULL};
-  if(ptsrc2dir!=ptsrcdir){
-    GetDotMat(PETSC_COMM_WORLD,&B,ptsrc2dir-1,ptsrcdir-1,Nr,Nz); 
-    shgdata.B=B;
-  }
-  if(expW){
-    shgdata.W=W;
-    shgdata.expW=expW;
-  }
+  SFGdataGroup sfgdata={ldospowerindex,omega1a,omega1b,omega2,ksp1a,ksp1b,ksp2,&its1a,&its1b,&its2,M1a,M1b,M2,b1a,b1b,x1a,x1b,ej,J1aconj,J1bconj,epsSReal,epsFReal,epsDiff1a,epsDiff1b,epsDiff2,epsMed1a,epsMed1b,epsMed2,epscoef1a,epscoef1b,epscoef2,ldos1agrad,ldos1bgrad,betagrad,outputbase,PETSC_NULL,PETSC_NULL};
   if(strcmp(vecNLfile,"")){
-    shgdata.vecNL=vecNL;
+    sfgdata.vecNL=vecNL;
   }
   
-  if (optJob==1){
-    nlopt_set_max_objective(opt,optldos,&ldos1data);
-  }else if (optJob==2){
-    nlopt_set_max_objective(opt,optfomnfc,&shgdata);
-  }
-
+  nlopt_set_max_objective(opt,optsfg,&sfgdata);
+  
   result = nlopt_optimize(opt,epsopt,&maxf);
 
   if (result < 0) {
@@ -535,90 +516,34 @@ if (Job==2){
   double beta;
   double s1=0.1, ds=0.01, s2=1.0+ds, epscen;
   
-  if (optJob==1){
+  double ldospowerindex;
+  PetscOptionsGetReal(PETSC_NULL,"-ldospowerindex",&ldospowerindex,&flg);  MyCheckAndOutputDouble(flg,ldospowerindex,"ldospowerindex","ldospowerindex");
 
-    for (epscen=s1;epscen<s2;epscen+=ds)
-      {
-        epsopt[epsoptj]=epscen;
-        beta = optldos(DegFree,epsopt,grad,&ldos1data);
-        PetscPrintf(PETSC_COMM_WORLD,"epscen: %g beta: %g beta-grad: %g \n", epsopt[epsoptj], beta, grad[epsoptj]);
-      }
- 
-  }else if (optJob==2){
-    double ldospowerindex;
-    PetscOptionsGetReal(PETSC_NULL,"-ldospowerindex",&ldospowerindex,&flg);  MyCheckAndOutputDouble(flg,ldospowerindex,"ldospowerindex","ldospowerindex");
+  Vec ej,betagrad;
+  VecDuplicate(vR,&ej);
+  VecDuplicate(epsSReal,&betagrad);
+  if(ptsrcdir==1) VecCopy(unitr,ej);
+  if(ptsrcdir==2) VecCopy(unitp,ej);
+  if(ptsrcdir==3) VecCopy(unitz,ej);
 
-    Vec ej,betagrad;
-    VecDuplicate(vR,&ej);
-    VecDuplicate(epsSReal,&betagrad);
-    if(ptsrcdir==1) VecCopy(unitr,ej);
-    if(ptsrcdir==2) VecCopy(unitp,ej);
-    if(ptsrcdir==3) VecCopy(unitz,ej);
-
-    SHGdataGroup shgdata={ldospowerindex,omega1,omega2,ksp1,ksp2,&its1,&its2,M1,M2,b1,x1,ej,J1conj,epsSReal,epsFReal,epsDiff1,epsDiff2,epsMed1,epsMed2,epscoef1,epscoef2,ldos1grad,betagrad,outputbase,PETSC_NULL,PETSC_NULL,0,PETSC_NULL};
-    if(ptsrc2dir!=ptsrcdir){
-      GetDotMat(PETSC_COMM_WORLD,&B,ptsrc2dir-1,ptsrcdir-1,Nr,Nz); 
-      shgdata.B=B;
-    }  
-    if(expW){
-      shgdata.W=W;
-      shgdata.expW=expW;
-    }
-    if(strcmp(vecNLfile,"")){
-      shgdata.vecNL=vecNL;
-    }
-    
-    for (epscen=s1;epscen<s2;epscen+=ds)
-      {
-	epsopt[epsoptj]=epscen;
-	beta = optfomnfc(DegFree,epsopt,grad,&shgdata);
-	PetscPrintf(PETSC_COMM_WORLD,"epscen: %g beta: %g beta-grad: %g \n", epsopt[epsoptj], beta, grad[epsoptj]);
-      }
-
-    VecDestroy(&ej);
-    VecDestroy(&betagrad);
-    
+  SFGdataGroup sfgdata={ldospowerindex,omega1a,omega1b,omega2,ksp1a,ksp1b,ksp2,&its1a,&its1b,&its2,M1a,M1b,M2,b1a,b1b,x1a,x1b,ej,J1aconj,J1bconj,epsSReal,epsFReal,epsDiff1a,epsDiff1b,epsDiff2,epsMed1a,epsMed1b,epsMed2,epscoef1a,epscoef1b,epscoef2,ldos1agrad,ldos1bgrad,betagrad,outputbase,PETSC_NULL,PETSC_NULL};
+  if(strcmp(vecNLfile,"")){
+    sfgdata.vecNL=vecNL;
   }
+  
+  for (epscen=s1;epscen<s2;epscen+=ds)
+    {
+      epsopt[epsoptj]=epscen;
+      beta = optsfg(DegFree,epsopt,grad,&sfgdata);
+      PetscPrintf(PETSC_COMM_WORLD,"epscen: %g beta: %g beta-grad: %g \n", epsopt[epsoptj], beta, grad[epsoptj]);
+    }
 
+  VecDestroy(&ej);
+  VecDestroy(&betagrad);
+    
 
-}
+ }
 
- if (Job==3){
-   /*---------Level Set Optimization---------*/
-   PetscPrintf(PETSC_COMM_WORLD,"**********You have chosen Level Set optimization. Only 1d version available for now.**********\n");
-   double dt, maxf=0;
-   int maxeval,steplength;
-   PetscOptionsGetInt(PETSC_NULL,"-maxeval",&maxeval,&flg);  MyCheckAndOutputInt(flg,maxeval,"maxeval","max number of evaluation");
-   PetscOptionsGetInt(PETSC_NULL,"-steplength",&steplength,&flg);  MyCheckAndOutputInt(flg,steplength,"steplength","step length of lsf evolution");
-   PetscOptionsGetReal(PETSC_NULL,"-dt",&dt,&flg);  MyCheckAndOutputDouble(flg,dt,"dt","time step for lvs evolution");
-   
-   if (optJob==1){
-     maxf=lvs1d_opt(optldos,DegFree,epsopt,grad,&ldos1data,maxeval,dt,steplength);
-   }else if (optJob==2){
-     double ldospowerindex;
-     PetscOptionsGetReal(PETSC_NULL,"-ldospowerindex",&ldospowerindex,&flg);  MyCheckAndOutputDouble(flg,ldospowerindex,"ldospowerindex","ldospowerindex");
-
-     Vec ej,betagrad;
-     VecDuplicate(vR,&ej);
-     VecDuplicate(epsSReal,&betagrad);
-     if(ptsrcdir==1) VecCopy(unitr,ej);
-     if(ptsrcdir==2) VecCopy(unitp,ej);
-     if(ptsrcdir==3) VecCopy(unitz,ej);
-
-     SHGdataGroup shgdata={ldospowerindex,omega1,omega2,ksp1,ksp2,&its1,&its2,M1,M2,b1,x1,ej,J1conj,epsSReal,epsFReal,epsDiff1,epsDiff2,epsMed1,epsMed2,epscoef1,epscoef2,ldos1grad,betagrad,outputbase};
-     maxf=lvs1d_opt(optfomnfc,DegFree,epsopt,grad,&shgdata,maxeval,dt,steplength);
-
-     VecDestroy(&ej);
-     VecDestroy(&betagrad);
-   }
-   else if (optJob==3){
-     maxf=lvs1d_opt(test,DegFree,epsopt,grad,NULL,maxeval,dt,steplength);
-   }
-   
-   PetscPrintf(PETSC_COMM_WORLD,"*********optimized objective value is %g .\n",maxf);
-   
-}
- 
 /*------------------------------------------------*/
 /*------------------------------------------------*/
 /*------------------------------------------------*/
@@ -632,7 +557,8 @@ if (Job==2){
   ierr = MatDestroy(&B); CHKERRQ(ierr);
   ierr = MatDestroy(&C); CHKERRQ(ierr);
   ierr = MatDestroy(&D); CHKERRQ(ierr);
-  ierr = MatDestroy(&M1); CHKERRQ(ierr);  
+  ierr = MatDestroy(&M1a); CHKERRQ(ierr); 
+  ierr = MatDestroy(&M1b); CHKERRQ(ierr);   
   ierr = MatDestroy(&M2); CHKERRQ(ierr);
   ierr = MatDestroy(&Hfilt); CHKERRQ(ierr);
 
@@ -645,27 +571,34 @@ if (Job==2){
   ierr = VecDestroy(&unitz); CHKERRQ(ierr);
   ierr = VecDestroy(&ptsrc); CHKERRQ(ierr);
 
-  ierr = VecDestroy(&epsDiff1); CHKERRQ(ierr);
+  ierr = VecDestroy(&epsDiff1a); CHKERRQ(ierr);
+  ierr = VecDestroy(&epsDiff1b); CHKERRQ(ierr);
   ierr = VecDestroy(&epsDiff2); CHKERRQ(ierr);
-  ierr = VecDestroy(&epscoef1); CHKERRQ(ierr);
+  ierr = VecDestroy(&epscoef1a); CHKERRQ(ierr);
+  ierr = VecDestroy(&epscoef1b); CHKERRQ(ierr);
   ierr = VecDestroy(&epscoef2); CHKERRQ(ierr);
-  ierr = VecDestroy(&epsMed1); CHKERRQ(ierr);
+  ierr = VecDestroy(&epsMed1a); CHKERRQ(ierr);
+  ierr = VecDestroy(&epsMed1b); CHKERRQ(ierr);
   ierr = VecDestroy(&epsMed2); CHKERRQ(ierr);
   ierr = VecDestroy(&epsSReal); CHKERRQ(ierr);
   ierr = VecDestroy(&epsFReal); CHKERRQ(ierr);
   ierr = VecDestroy(&vgradlocal); CHKERRQ(ierr);
 
-  ierr = VecDestroy(&x1); CHKERRQ(ierr);
-  ierr = VecDestroy(&b1);CHKERRQ(ierr);
-  ierr = VecDestroy(&J1); CHKERRQ(ierr);
-  ierr = VecDestroy(&J1conj); CHKERRQ(ierr);
-  ierr = VecDestroy(&ldos1grad); CHKERRQ(ierr);
-
-  ierr = VecDestroy(&W); CHKERRQ(ierr);
+  ierr = VecDestroy(&x1a); CHKERRQ(ierr);
+  ierr = VecDestroy(&b1a);CHKERRQ(ierr);
+  ierr = VecDestroy(&J1a); CHKERRQ(ierr);
+  ierr = VecDestroy(&J1aconj); CHKERRQ(ierr);
+  ierr = VecDestroy(&ldos1agrad); CHKERRQ(ierr);
+  ierr = VecDestroy(&x1b); CHKERRQ(ierr);
+  ierr = VecDestroy(&b1b);CHKERRQ(ierr);
+  ierr = VecDestroy(&J1b); CHKERRQ(ierr);
+  ierr = VecDestroy(&J1bconj); CHKERRQ(ierr);
+  ierr = VecDestroy(&ldos1bgrad); CHKERRQ(ierr);
 
   ierr = VecDestroy(&vecNL); CHKERRQ(ierr);
   
-  ierr = KSPDestroy(&ksp1);CHKERRQ(ierr);
+  ierr = KSPDestroy(&ksp1a);CHKERRQ(ierr);
+  ierr = KSPDestroy(&ksp1b);CHKERRQ(ierr);
   ierr = KSPDestroy(&ksp2);CHKERRQ(ierr);
   ierr = KSPDestroy(&kspH);CHKERRQ(ierr);
 

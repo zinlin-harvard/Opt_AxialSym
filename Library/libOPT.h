@@ -54,6 +54,47 @@ typedef struct{
   Vec vecNL;
 } SHGdataGroup;
 
+typedef struct{
+  double ldospowerindex;
+  double omega1a;
+  double omega1b;
+  double omega2;
+  KSP ksp1a;
+  KSP ksp1b;
+  KSP ksp2;
+  int *its1a;
+  int *its1b;
+  int *its2;
+  Mat M1a;
+  Mat M1b;
+  Mat M2;
+  Vec b1a;
+  Vec b1b;
+  Vec x1a;
+  Vec x1b;
+  Vec ej;
+  Vec J1aconj;
+  Vec J1bconj;
+  Vec epsSReal;
+  Vec epsFReal;
+  Vec epsDiff1a;
+  Vec epsDiff1b;
+  Vec epsDiff2;
+  Vec epsMed1a;
+  Vec epsMed1b;
+  Vec epsMed2;
+  Vec epscoef1a;
+  Vec epscoef1b;
+  Vec epscoef2;
+  Vec ldos1agrad;
+  Vec ldos1bgrad;
+  Vec betagrad;
+  int outputbase;
+  Mat B;
+  Vec vecNL;
+} SFGdataGroup;
+
+
 typedef struct
 {
    int iz;
@@ -165,3 +206,9 @@ double find_maxabs(double *v, int n);
 double min(double a, double b);
 double max(double a, double b);
 double test(int DegFree, double *epsopt, double *grad, void *data);
+
+// from sfg.c
+double computesfg(Vec x1a, Vec x1b, Vec x2, Vec ej, int *its, KSP ksp1a, KSP ksp1b, KSP ksp2, Mat MoneA, Mat MoneB,Mat Mtwo, double omega2, Vec epsFReal, Vec epscoef1a, Vec epscoef1b, Vec epscoef2, Vec betagrad, Vec vecNL);
+
+// from optfuncs2.c
+double optsfg(int DegFree, double *epsopt, double *grad, void *data);

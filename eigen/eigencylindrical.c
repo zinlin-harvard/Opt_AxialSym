@@ -166,7 +166,7 @@ int main(int argc, char **argv)
 
   
   /*-----Set up epsSReal, epsFReal, vgradlocal ------*/
-  ierr = MatGetVecs(A,&epsSReal, &epsFReal); CHKERRQ(ierr);
+  ierr = MatCreateVecs(A,&epsSReal, &epsFReal); CHKERRQ(ierr);
   
   ierr = PetscObjectSetName((PetscObject) epsSReal, "epsSReal");CHKERRQ(ierr);
   ierr = PetscObjectSetName((PetscObject) epsFReal, "epsFReal");CHKERRQ(ierr);
